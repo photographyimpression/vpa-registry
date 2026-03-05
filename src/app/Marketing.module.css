@@ -1,0 +1,150 @@
+/* MARKETING MODULE CSS (Platform, Solutions, Enterprise) */
+.marketingHero {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 6rem 4rem;
+    text-align: center;
+    position: relative;
+    z-index: 10;
+    animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.marketingBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(11, 26, 48, 0.05);
+    border: 1px solid rgba(11, 26, 48, 0.15);
+    padding: 0.4rem 1.25rem;
+    border-radius: 100px;
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--accent-color);
+    margin-bottom: 2rem;
+}
+
+@media (prefers-color-scheme: dark) {
+    .marketingBadge {
+        background: rgba(212, 175, 55, 0.1);
+        border-color: rgba(212, 175, 55, 0.25);
+    }
+}
+
+.marketingTitle {
+    font-size: 4rem;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    color: var(--foreground);
+    margin-bottom: 1.5rem;
+}
+
+.marketingSubtitle {
+    font-size: 1.25rem;
+    line-height: 1.6;
+    color: var(--foreground);
+    opacity: 0.6;
+    margin: 0 auto 3rem;
+    max-width: 700px;
+}
+
+.marketingFeatures {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 4rem 6rem;
+    position: relative;
+    z-index: 10;
+}
+
+.marketingSection {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 4rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 4rem;
+}
+
+.imageMockup {
+    width: 100%;
+    border-radius: 20px;
+    box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    position: relative;
+}
+
+.featureBlock {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 2.5rem;
+    border-radius: 24px;
+    text-align: left;
+    transition: transform 0.2s;
+}
+
+@media (prefers-color-scheme: dark) {
+    .featureBlock {
+        background: rgba(20, 20, 25, 0.6);
+        border-color: rgba(255, 255, 255, 0.05);
+    }
+}
+
+.featureBlock:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.05);
+}
+
+.featureIcon {
+    color: var(--accent-color);
+    margin-bottom: 1.5rem;
+    background: rgba(212, 175, 55, 0.1);
+    padding: 12px;
+    border-radius: 12px;
+}
+
+.featureBlock h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+}
+
+.featureBlock p {
+    font-size: 0.95rem;
+    opacity: 0.7;
+    line-height: 1.6;
+}
+
+@media (max-width: 1024px) {
+    .marketingFeatures {
+        grid-template-columns: 1fr;
+        padding: 0 2rem 4rem;
+    }
+
+    .marketingHero {
+        padding: 4rem 2rem;
+    }
+
+    .marketingTitle {
+        font-size: 3rem;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

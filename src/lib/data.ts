@@ -1,0 +1,57 @@
+import Papa from 'papaparse';
+
+export interface CertificateRecord {
+    VPA_Tracking_ID: string;
+    Cert_Issue_Date: string;
+    Manufacturer_Name: string;
+    Device_Metadata: string;
+    Master_Image_URL: string;
+}
+
+export async function getCertificateData(id: string): Promise<CertificateRecord | null> {
+    const url = process.env.GOOGLE_SHEETS_CSV_URL;
+
+    // Logging environment status for debugging (to be replaced with proper telemetry in prod)
+    if (!url) {
+        console.warn("[VPA API] GOOGLE_SHEETS_CSV_URL missing. Using selective fallback mode.");
+
+        // Items 3 & 4: Fallback for demo purposes
+        if (id === 'DEMO-123' || id.startsWith('VPA-NEW')) {
+            return {
+                VPA_Tracking_ID: id,
+                Cert_Issue_Date: new Date().toISOString().split('T')[0],
+                Manufacturer_Name: 'Secure Capture Systems (Mock)',
+                Device_Metadata: 'Lens: 50mm f/1.8, ISO: 100, Sensor: Full Frame CMOS',
+                Master_Image_URL: 'https://libimages1.princeton.edu/loris/pudl0001%2F4609321%2Fs42%2F00000001.jp2/info.json'
+            };
+        }
+    }
+
+    if (!url) return null;
+
+    try {
+        const fetchUrl = url.includes('?') ? `${url}&_cb=${Date.now()}` : `${url}?_cb=${Date.now()}`;
+        const response = await fetch(fetchUrl, { cache: 'no-store' });
+
+        if (!response.ok) {
+            console.error(`[VPA API] Network error: ${response.status} ${response.statusText}`);
+            return null;
+        }
+
+        const csvText = await response.text();
+        const parsed = Papa.parse<CertificateRecord>(csvText, {
+            header: true,
+            skipEmptyLines: true,
+        });
+
+        if (parsed.errors.length > 0) {
+            console.error("[VPA API] CSV Parsing errors:", parsed.errors);
+        }
+
+        const record = parsed.data.find(r => r.VPA_Tracking_ID === id);
+        return record || null;
+    } catch (error) {
+        console.error("[VPA API] Critical fetch failure:", error);
+        return null;
+    }
+}

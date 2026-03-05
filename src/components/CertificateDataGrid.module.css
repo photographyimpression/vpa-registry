@@ -1,0 +1,53 @@
+.gridContainer {
+    margin: 2rem 0;
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 0;
+}
+
+.sectionTitle {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    margin-bottom: 1rem;
+    color: #666;
+}
+
+.dataTable {
+    width: 100%;
+    text-align: left;
+}
+
+.dataTable tr {
+    border-bottom: 1px dashed #ccc;
+}
+
+.dataTable tr:last-child {
+    border-bottom: none;
+}
+
+.labelCell {
+    padding: 1rem 0;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #444;
+    width: 30%;
+    vertical-align: top;
+}
+
+.valueCell {
+    padding: 1rem 0;
+    font-family: var(--font-serif);
+    font-size: 1.1rem;
+    color: var(--foreground);
+}
+
+.valueCellId {
+    padding: 1rem 0;
+    font-family: var(--font-mono);
+    font-size: 1.2rem;
+    font-weight: bold;
+    letter-spacing: 0.05em;
+    color: var(--foreground);
+}

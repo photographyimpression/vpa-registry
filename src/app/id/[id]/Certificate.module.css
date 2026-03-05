@@ -1,0 +1,157 @@
+.pageWrapper {
+    min-height: 100vh;
+    padding: 4rem 2rem;
+    background: #f4f2ee;
+    /* Papery/Archaic background */
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+@media (prefers-color-scheme: dark) {
+    .pageWrapper {
+        background: #05070a;
+    }
+}
+
+.certificateCard {
+    max-width: 1000px;
+    overflow: hidden;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+    position: relative;
+    z-index: 10;
+}
+
+.viewerSection {
+    width: 100%;
+}
+
+.viewerContainer {
+    width: 100%;
+    height: 600px;
+    background: #0a0c10;
+    border-radius: 24px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-lg);
+}
+
+.viewerContainer::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 40px;
+    height: 40px;
+    margin: -20px 0 0 -20px;
+    border: 3px solid rgba(212, 175, 55, 0.1);
+    border-top-color: var(--accent-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    z-index: 0;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.viewerOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+    overflow: hidden;
+}
+
+.scanningLine {
+    position: absolute;
+    top: -10%;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(to right, transparent, var(--accent-color), transparent);
+    box-shadow: 0 0 15px var(--accent-color);
+    opacity: 0.3;
+    animation: scan 3s linear infinite;
+}
+
+@media print {
+    .pageWrapper {
+        padding: 0;
+        background: white;
+    }
+
+    .certificateCard {
+        box-shadow: none !important;
+        border: none !important;
+    }
+
+    .viewerSection,
+    .viewerCaption,
+    :global(nav),
+    :global(footer),
+    .viewerOverlay,
+    :global(.osd-custom-controls) {
+        display: none !important;
+    }
+
+    .dataSection {
+        width: 100%;
+    }
+}
+
+@keyframes scan {
+    0% {
+        top: -10%;
+    }
+
+    100% {
+        top: 110%;
+    }
+}
+
+/* OSD Override */
+:global(.openseadragon-container) {
+    background-color: transparent !important;
+}
+
+:global(.osd-custom-controls) {
+    background: rgba(0, 0, 0, 0.6) !important;
+    backdrop-filter: blur(12px);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 1rem !important;
+}
+
+.viewerCaption {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: #666;
+    margin-top: 0.5rem;
+    text-align: center;
+}
+
+.dataSection {
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .certificateCard {
+        padding: 2rem;
+    }
+
+    .viewerContainer {
+        height: 400px;
+    }
+}

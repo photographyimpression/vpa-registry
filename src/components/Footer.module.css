@@ -1,0 +1,264 @@
+.footer {
+    background: var(--background);
+    border-top: 1px solid var(--border-color);
+    padding: 10rem 0 0;
+    margin-top: 10rem;
+    position: relative;
+    z-index: 10;
+}
+
+.footerContainer {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 4rem;
+    display: flex;
+    justify-content: space-between;
+    gap: 6rem;
+    padding-bottom: 8rem;
+}
+
+.footerBrand {
+    flex: 1.5;
+}
+
+.logoRow {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.footerLogoGraphic {
+    border-radius: var(--radius-sm);
+    filter: saturate(0.8);
+    background: white;
+}
+
+.footerBrandText {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: 1.25rem;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    color: var(--foreground);
+}
+
+.footerTagline {
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.6;
+    opacity: 0.5;
+    color: var(--foreground);
+    max-width: 320px;
+}
+
+.footerLinksGrid {
+    display: flex;
+    gap: 5rem;
+    flex: 2.5;
+    justify-content: flex-end;
+}
+
+.footerColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.footerColumn h4 {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 1rem;
+    color: var(--foreground);
+    opacity: 0.4;
+}
+
+.footerColumn a {
+    text-decoration: none;
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--foreground);
+    opacity: 0.6;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.footerColumn a:hover {
+    opacity: 1;
+    color: var(--accent-color);
+    transform: translateX(4px);
+}
+
+.footerBottom {
+    border-top: 1px solid var(--border-color);
+    padding: 3rem 0;
+    background: rgba(0, 0, 0, 0.01);
+}
+
+@media (prefers-color-scheme: dark) {
+    .footerBottom {
+        background: rgba(255, 255, 255, 0.01);
+    }
+}
+
+.footerBottomContainer {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 4rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    opacity: 0.4;
+    font-weight: 500;
+}
+
+.nodeMarquee {
+    padding: 1.5rem 0;
+    border-top: 1px solid var(--border-color);
+    background: rgba(0, 0, 0, 0.02);
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.2em;
+    color: var(--foreground);
+    opacity: 0.4;
+}
+
+@media (prefers-color-scheme: dark) {
+    .nodeMarquee {
+        background: rgba(255, 255, 255, 0.01);
+    }
+}
+
+.statusIndicator {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 800;
+    opacity: 0.5;
+    letter-spacing: 0.05em;
+}
+
+.pulseDot {
+    width: 8px;
+    height: 8px;
+    background: #10b981;
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+    animation: footerPulse 2s infinite;
+}
+
+@keyframes footerPulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.5);
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.footerStatus {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.statusDot {
+    width: 6px;
+    height: 6px;
+    background: #10b981;
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+}
+
+.newsletter {
+    margin-top: 3rem;
+}
+
+.newsletter h5 {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 1.25rem;
+    opacity: 0.4;
+}
+
+.newsletterForm {
+    display: flex;
+    gap: 0.5rem;
+    max-width: 300px;
+}
+
+.newsletterForm input {
+    background: rgba(0, 0, 0, 0.03);
+    border: 1px solid var(--border-color);
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    color: var(--foreground);
+    outline: none;
+    width: 100%;
+    transition: all 0.2s;
+}
+
+.newsletterForm input:focus {
+    background: white;
+    border-color: var(--accent-color);
+}
+
+.newsletterForm button {
+    background: var(--foreground);
+    color: var(--background);
+    border: none;
+    padding: 0 1.5rem;
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.newsletterForm button:hover {
+    background: var(--accent-color);
+    color: white;
+}
+
+@media (max-width: 1024px) {
+    .footerContainer {
+        flex-direction: column;
+        padding: 0 2rem;
+        gap: 4rem;
+    }
+
+    .footerLinksGrid {
+        justify-content: flex-start;
+        gap: 3rem;
+        flex-wrap: wrap;
+    }
+
+    .footerBottomContainer {
+        padding: 0 2rem;
+        flex-direction: column;
+        gap: 1.5rem;
+        text-align: center;
+    }
+}
