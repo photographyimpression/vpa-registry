@@ -73,7 +73,6 @@ else
     --storage-type=SSD \
     --storage-size=10GB \
     --storage-auto-increase \
-    --no-assign-ip \
     --project="$PROJECT_ID"
   echo "  ✓ Cloud SQL instance created"
 fi
