@@ -1,0 +1,47 @@
+steps:
+  # Pull the latest n8n image and deploy to Cloud Run
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'deploy-n8n'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        gcloud run deploy vpa-n8n \
+          --image=n8nio/n8n:latest \
+          --platform=managed \
+          --region=us-central1 \
+          --port=5678 \
+          --memory=2Gi \
+          --cpu=2 \
+          --min-instances=1 \
+          --max-instances=5 \
+          --timeout=300 \
+          --service-account=vpa-n8n-sa@$PROJECT_ID.iam.gserviceaccount.com \
+          --add-cloudsql-instances=$PROJECT_ID:us-central1:vpa-n8n-db \
+          --set-env-vars="\
+        DB_TYPE=postgresdb,\
+        DB_POSTGRESDB_HOST=/cloudsql/$PROJECT_ID:us-central1:vpa-n8n-db,\
+        DB_POSTGRESDB_PORT=5432,\
+        DB_POSTGRESDB_DATABASE=n8n,\
+        DB_POSTGRESDB_USER=n8n,\
+        N8N_PORT=5678,\
+        N8N_PROTOCOL=https,\
+        N8N_HOST=n8n.vparegistry.com,\
+        WEBHOOK_URL=https://n8n.vparegistry.com/,\
+        N8N_BASIC_AUTH_ACTIVE=true,\
+        N8N_BASIC_AUTH_USER=admin,\
+        EXECUTIONS_PROCESS=main,\
+        N8N_SKIP_WEBHOOK_DEREGISTRATION_SHUTDOWN=true,\
+        GENERIC_TIMEZONE=America/Toronto,\
+        NODE_ENV=production" \
+          --set-secrets="\
+        DB_POSTGRESDB_PASSWORD=n8n-db-password:latest,\
+        N8N_ENCRYPTION_KEY=n8n-encryption-key:latest,\
+        N8N_BASIC_AUTH_PASSWORD=n8n-admin-password:latest" \
+          --allow-unauthenticated
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+substitutions:
+  _REGION: us-central1
