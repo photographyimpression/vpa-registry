@@ -29,16 +29,16 @@ export default function Platform() {
                     />
                 </div>
                 <div>
-                    <h2 className={mktgStyles.marketingTitle} style={{ fontSize: '2.5rem', textAlign: 'left' }}>Sub-millisecond latency. <br />Decentralized proof.</h2>
+                    <h2 className={mktgStyles.marketingTitle} style={{ fontSize: '2.5rem', textAlign: 'left' }}>Fast, reliable verification. <br />Built for global scale.</h2>
                     <p className={mktgStyles.marketingSubtitle} style={{ textAlign: 'left', margin: '1.5rem 0' }}>
-                        Our infrastructure is designed for extreme scale. By utilizing a distributed validator network across 14 sovereign jurisdictions, VPA provides 100% uptime for authentication lookups.
+                        Our infrastructure is designed for scale. VPA Registry runs on Google Cloud's global network, providing high availability and low-latency certificate lookups from anywhere in the world.
                     </p>
                     <div style={{ display: 'grid', gap: '1.5rem' }}>
                         <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
                             <Cpu className={mktgStyles.featureIcon} size={24} />
                             <div>
-                                <strong style={{ display: 'block' }}>Hardware-Level Trust</strong>
-                                <span style={{ opacity: 0.6, fontSize: '0.9rem' }}>Secure Enclave (TEE) backed computation for zero-leakage operations.</span>
+                                <strong style={{ display: 'block' }}>Enterprise-Grade Security</strong>
+                                <span style={{ opacity: 0.6, fontSize: '0.9rem' }}>Hosted on Google Cloud with encrypted storage and secure authentication.</span>
                             </div>
                         </div>
                         <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
@@ -55,18 +55,18 @@ export default function Platform() {
             <div className={mktgStyles.marketingFeatures}>
                 <div className={mktgStyles.featureBlock}>
                     <Server size={32} className={mktgStyles.featureIcon} />
-                    <h3>Distributed Ledger</h3>
-                    <p>Certificates are hashed and stored across a fully redundant global network, preventing single-points of failure or tampering.</p>
+                    <h3>Tamper-Evident Registry</h3>
+                    <p>Certificates are stored with a unique VPA Tracking ID and QR code, creating a permanent, publicly verifiable record of authenticity.</p>
                 </div>
                 <div className={mktgStyles.featureBlock}>
                     <Shield size={32} className={mktgStyles.featureIcon} />
-                    <h3>Zero-Knowledge Proofs</h3>
-                    <p>Authentication lookups do not expose sensitive manufacturer data. Cryptographic hashing confirms authenticity blindly.</p>
+                    <h3>Privacy-Preserving Verification</h3>
+                    <p>Buyers can verify product authenticity without exposing sensitive manufacturer data beyond what has been explicitly published.</p>
                 </div>
                 <div className={mktgStyles.featureBlock}>
                     <Globe size={32} className={mktgStyles.featureIcon} />
                     <h3>Anywhere Verification</h3>
-                    <p>With edge-networking, authoritative queries return in under 50ms from anywhere in the world.</p>
+                    <p>Certificates are publicly accessible worldwide. Anyone with a QR code scanner can verify a product authenticity in seconds.</p>
                 </div>
             </div>
         </main>

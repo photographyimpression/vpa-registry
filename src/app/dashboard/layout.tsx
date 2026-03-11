@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useSession, signOut } from 'next-auth/react';
 import { LayoutDashboard, Database, Activity, Key, Settings, LogOut, ShieldCheck } from 'lucide-react';
 import styles from './Dashboard.module.css';
 
@@ -11,6 +12,11 @@ export default function DashboardLayout({
     children: React.ReactNode;
 }) {
     const pathname = usePathname();
+    const { data: session } = useSession();
+
+    const userName = session?.user?.name ?? 'Partner';
+    const userEmail = session?.user?.email ?? '';
+    const initials = userName.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase();
 
     return (
         <div className={styles.dashboardShell}>
@@ -41,15 +47,19 @@ export default function DashboardLayout({
 
                 <div className={styles.sidebarFooter}>
                     <div className={styles.userProfile}>
-                        <div className={styles.avatar}>LS</div>
+                        <div className={styles.avatar}>{initials || '?'}</div>
                         <div className={styles.userInfo}>
-                            <strong>Luxora Systems</strong>
-                            <span>Enterprise Admin</span>
+                            <strong>{userName}</strong>
+                            <span>{userEmail}</span>
                         </div>
                     </div>
-                    <Link href="/" className={styles.logoutBtn}>
+                    <button
+                        onClick={() => signOut({ callbackUrl: '/' })}
+                        className={styles.logoutBtn}
+                        style={{ background: 'none', cursor: 'pointer', width: '100%', textAlign: 'left' }}
+                    >
                         <LogOut size={18} /> Sign Out
-                    </Link>
+                    </button>
                 </div>
             </aside>
 

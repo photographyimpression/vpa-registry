@@ -22,10 +22,7 @@ export default function Footer() {
                     </p>
                     <div className={styles.newsletter}>
                         <h5>Stay Authenticated</h5>
-                        <form className={styles.newsletterForm}>
-                            <input type="email" placeholder="Email Address" />
-                            <button type="submit">JOIN</button>
-                        </form>
+                        <p style={{ fontSize: '0.8rem', opacity: 0.5, marginTop: '0.5rem' }}>Updates on new features and platform news coming soon.</p>
                     </div>
                 </div>
 
@@ -44,15 +41,15 @@ export default function Footer() {
                     </div>
                     <div className={styles.footerColumn}>
                         <h4>Governance</h4>
-                        <Link href="#">ISO Standards</Link>
-                        <Link href="#">Global Registry Act</Link>
-                        <Link href="#">Digital Identity</Link>
+                        <Link href="/platform">Infrastructure</Link>
+                        <Link href="/solutions">Industry Solutions</Link>
+                        <Link href="/verification">Verify a Certificate</Link>
                     </div>
                     <div className={styles.footerColumn}>
                         <h4>Legal</h4>
-                        <Link href="#">Privacy Policy</Link>
-                        <Link href="#">Terms of Service</Link>
-                        <Link href="#">Cookie Policy</Link>
+                        <Link href="/privacy">Privacy Policy</Link>
+                        <Link href="/terms">Terms of Service</Link>
+                        <Link href="/cookies">Cookie Policy</Link>
                     </div>
                 </div>
             </div>
