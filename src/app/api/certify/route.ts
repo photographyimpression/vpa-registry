@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { applyWatermark } from '@/app/api/watermark/route';
+import { auth } from '@/auth';
 
 export const maxDuration = 60;
+
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/tiff'];
+const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
 
 /**
  * POST /api/certify
@@ -15,6 +19,12 @@ export const maxDuration = 60;
  *   { vpaId, certifiedImageBase64, registryUrl, certifiedImageUrl? }
  */
 export async function POST(req: NextRequest) {
+    // Auth guard — only authenticated partners may issue certificates
+    const session = await auth();
+    if (!session?.user) {
+        return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
     try {
         const formData = await req.formData();
         const file = formData.get('image') as File | null;
@@ -23,6 +33,22 @@ export async function POST(req: NextRequest) {
 
         if (!file) {
             return NextResponse.json({ error: 'No image file provided' }, { status: 400 });
+        }
+
+        // Validate MIME type
+        if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+            return NextResponse.json(
+                { error: `Unsupported file type: ${file.type}. Accepted: JPEG, PNG, WebP, TIFF` },
+                { status: 400 }
+            );
+        }
+
+        // Validate file size
+        if (file.size > MAX_FILE_SIZE_BYTES) {
+            return NextResponse.json(
+                { error: 'File too large. Maximum allowed size is 50 MB.' },
+                { status: 400 }
+            );
         }
 
         // ── 1. Generate VPA ID ──────────────────────────────────────────────

@@ -4,8 +4,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { ShieldCheck, Package, Building2, Check, ArrowRight, Zap } from 'lucide-react';
 import styles from './Pricing.module.css';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 
 const plans = [
     {
@@ -75,7 +73,6 @@ export default function PricingPage() {
 
     return (
         <>
-            <Navbar />
             <main className={styles.pricingPage}>
                 <section className={styles.hero}>
                     <span className={styles.eyebrow}>Transparent Pricing</span>
@@ -163,7 +160,6 @@ export default function PricingPage() {
                     </div>
                 </section>
             </main>
-            <Footer />
         </>
     );
 }

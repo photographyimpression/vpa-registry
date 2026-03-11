@@ -25,9 +25,25 @@ export async function POST(req: NextRequest) {
     return processWatermark(body.imageUrl, body.vpaId);
 }
 
+const ALLOWED_IMAGE_HOSTS = [
+    'storage.googleapis.com',
+    'vparegistry.com',
+    'www.vparegistry.com',
+];
+
 async function processWatermark(imageUrl: string | null, vpaId: string | null): Promise<NextResponse> {
     if (!imageUrl || !vpaId) {
         return NextResponse.json({ error: 'imageUrl and vpaId are required' }, { status: 400 });
+    }
+
+    // SSRF protection: only allow trusted hosts
+    try {
+        const parsed = new URL(imageUrl);
+        if (!ALLOWED_IMAGE_HOSTS.includes(parsed.hostname)) {
+            return NextResponse.json({ error: 'imageUrl host is not allowed' }, { status: 400 });
+        }
+    } catch {
+        return NextResponse.json({ error: 'Invalid imageUrl' }, { status: 400 });
     }
 
     try {
@@ -53,14 +69,27 @@ async function processWatermark(imageUrl: string | null, vpaId: string | null): 
     }
 }
 
+const MIN_CERTIFIABLE_DIM = 300; // minimum px for either dimension
+
 export async function applyWatermark(imageBuffer: Buffer, vpaId: string): Promise<Buffer> {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://vparegistry.com';
     const certUrl = `${appUrl}/id/${vpaId}`;
 
     // Get source image dimensions
     const meta = await sharp(imageBuffer).metadata();
-    const width = meta.width || 800;
-    const height = meta.height || 600;
+    let width = meta.width || 800;
+    let height = meta.height || 600;
+
+    // Enforce minimum dimensions so overlays always fit
+    if (width < MIN_CERTIFIABLE_DIM || height < MIN_CERTIFIABLE_DIM) {
+        const scale = MIN_CERTIFIABLE_DIM / Math.min(width, height);
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+        imageBuffer = await sharp(imageBuffer)
+            .resize(width, height, { fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 1 } })
+            .png()
+            .toBuffer();
+    }
 
     // Scale QR code proportionally (roughly 14% of the shorter dimension)
     const qrSize = Math.max(80, Math.min(160, Math.floor(Math.min(width, height) * 0.14)));
