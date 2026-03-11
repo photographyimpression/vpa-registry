@@ -2,7 +2,8 @@ FROM node:20-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
-RUN apk add --no-cache libc6-compat vips-dev
+# vips-dev: sharp image processing; python3/make/g++: node-gyp for native builds
+RUN apk add --no-cache libc6-compat vips-dev python3 make g++
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
