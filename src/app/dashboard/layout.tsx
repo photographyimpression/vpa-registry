@@ -2,15 +2,15 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useSession, signOut } from 'next-auth/react';
+import { SessionProvider, useSession, signOut } from 'next-auth/react';
 import { LayoutDashboard, Database, Activity, Key, Settings, LogOut, ShieldCheck, User } from 'lucide-react';
 import styles from './Dashboard.module.css';
 
-export default function DashboardLayout({
-    children,
-}: {
-    children: React.ReactNode;
-}) {
+// Force dynamic rendering — dashboard is always auth-gated, never static
+export const dynamic = 'force-dynamic';
+
+// Inner component — must be inside SessionProvider to call useSession()
+function DashboardShell({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const { data: session } = useSession();
 
@@ -82,5 +82,18 @@ export default function DashboardLayout({
                 {children}
             </main>
         </div>
+    );
+}
+
+// Outer layout — provides SessionProvider context for all dashboard pages
+export default function DashboardLayout({
+    children,
+}: {
+    children: React.ReactNode;
+}) {
+    return (
+        <SessionProvider>
+            <DashboardShell>{children}</DashboardShell>
+        </SessionProvider>
     );
 }
