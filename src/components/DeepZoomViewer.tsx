@@ -13,6 +13,7 @@ export default function DeepZoomViewer({ imageUrl }: DeepZoomViewerProps) {
     useEffect(() => {
         if (!viewerRef.current) return;
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let viewer: any;
 
         const initOSD = async () => {

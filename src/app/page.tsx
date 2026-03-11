@@ -3,10 +3,8 @@
 import { useEffect, useRef } from 'react';
 import SearchPortal from '@/components/SearchPortal';
 import TrustStory from '@/components/TrustStory';
-import { ShieldCheck, Lock, Globe, ArrowRight, Zap } from 'lucide-react';
+import { ShieldCheck, Lock, Globe, Zap } from 'lucide-react';
 import styles from './Home.module.css';
-import Image from 'next/image';
-import Link from 'next/link';
 
 export default function Home() {
   const bentoRef = useRef<HTMLDivElement>(null);

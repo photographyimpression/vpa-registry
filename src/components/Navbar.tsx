@@ -22,6 +22,7 @@ export default function Navbar() {
 
     // Close mobile menu on route change
     useEffect(() => {
+        // eslint-disable-next-line
         setMobileMenuOpen(false);
     }, [pathname]);
 

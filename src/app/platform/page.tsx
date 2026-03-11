@@ -2,7 +2,7 @@ import styles from '@/app/Home.module.css';
 import mktgStyles from '@/app/Marketing.module.css';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, Server, Shield, Globe, Cpu, Database, Activity } from 'lucide-react';
+import { ArrowLeft, Server, Shield, Globe, Cpu, Activity } from 'lucide-react';
 
 export default function Platform() {
     return (

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
-import { LayoutDashboard, Database, Activity, Key, Settings, LogOut, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, Database, Activity, Key, Settings, LogOut, ShieldCheck, User } from 'lucide-react';
 import styles from './Dashboard.module.css';
 
 export default function DashboardLayout({
@@ -14,9 +14,14 @@ export default function DashboardLayout({
     const pathname = usePathname();
     const { data: session } = useSession();
 
-    const userName = session?.user?.name ?? 'Partner';
-    const userEmail = session?.user?.email ?? '';
-    const initials = userName.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase();
+    const name = session?.user?.name ?? 'Partner';
+    const email = session?.user?.email ?? '';
+    const initials = name
+        .split(' ')
+        .slice(0, 2)
+        .map((w: string) => w[0])
+        .join('')
+        .toUpperCase() || 'P';
 
     return (
         <div className={styles.dashboardShell}>
@@ -47,16 +52,26 @@ export default function DashboardLayout({
 
                 <div className={styles.sidebarFooter}>
                     <div className={styles.userProfile}>
-                        <div className={styles.avatar}>{initials || '?'}</div>
+                        {session?.user?.image ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                                src={session.user.image}
+                                alt={name}
+                                className={styles.avatar}
+                                style={{ borderRadius: '50%', objectFit: 'cover', width: '36px', height: '36px' }}
+                            />
+                        ) : (
+                            <div className={styles.avatar}>{initials}</div>
+                        )}
                         <div className={styles.userInfo}>
-                            <strong>{userName}</strong>
-                            <span>{userEmail}</span>
+                            <strong title={name}>{name}</strong>
+                            <span title={email}>{email || <User size={12} />}</span>
                         </div>
                     </div>
                     <button
                         onClick={() => signOut({ callbackUrl: '/' })}
                         className={styles.logoutBtn}
-                        style={{ background: 'none', cursor: 'pointer', width: '100%', textAlign: 'left' }}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left' }}
                     >
                         <LogOut size={18} /> Sign Out
                     </button>

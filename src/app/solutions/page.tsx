@@ -2,7 +2,7 @@ import styles from '@/app/Home.module.css';
 import mktgStyles from '@/app/Marketing.module.css';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, Shirt, Watch, Component, CheckCircle2, QrCode, Tag } from 'lucide-react';
+import { ArrowLeft, Shirt, Watch, Component, CheckCircle2 } from 'lucide-react';
 
 export default function Solutions() {
     return (
@@ -22,7 +22,7 @@ export default function Solutions() {
                 <div>
                     <h2 className={mktgStyles.marketingTitle} style={{ fontSize: '2.5rem', textAlign: 'left' }}>Seamless physical-to-digital linking.</h2>
                     <p className={mktgStyles.marketingSubtitle} style={{ textAlign: 'left', margin: '1.5rem 0' }}>
-                        VPA doesn't just provide software; we provide the bridge. Our cryptographic tagging solutions ensure that the physical object cannot be decoupled from its digital twin.
+                        VPA doesn&apos;t just provide software; we provide the bridge. Our cryptographic tagging solutions ensure that the physical object cannot be decoupled from its digital twin.
                     </p>
                     <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: '1rem' }}>
                         <li style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', opacity: 0.8 }}>

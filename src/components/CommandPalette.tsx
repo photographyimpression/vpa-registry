@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, LayoutDashboard, Database, ShieldCheck, Zap, X, Globe, Building } from 'lucide-react';
+import { Search, LayoutDashboard, Database, ShieldCheck, Zap, Globe, Building } from 'lucide-react';
 import styles from './CommandPalette.module.css';
 
 export default function CommandPalette() {
@@ -70,7 +70,7 @@ export default function CommandPalette() {
                             </div>
                         ))
                     ) : (
-                        <div className={styles.empty}>No commands found for "{query}"</div>
+                        <div className={styles.empty}>No commands found for &quot;{query}&quot;</div>
                     )}
                 </div>
 

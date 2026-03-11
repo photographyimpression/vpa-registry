@@ -34,6 +34,8 @@ export default function IssuancePage() {
     // Bulk state
     const [bulkFiles, setBulkFiles] = useState<UploadedFile[]>([]);
     const [bulkStep, setBulkStep] = useState<'upload' | 'processing' | 'done'>('upload');
+    const [bulkProductName, setBulkProductName] = useState('');
+    const [bulkBatchId, setBulkBatchId] = useState('BULK-BATCH-1');
 
     const singleFileRef = useRef<HTMLInputElement>(null);
     const bulkFileRef = useRef<HTMLInputElement>(null);
@@ -99,13 +101,38 @@ export default function IssuancePage() {
     };
 
     // ── BULK UPLOAD ──────────────────────────────────────────────────────────
+    const MAX_BULK_FILES = 100;
+    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/tiff'];
+    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+
     const handleBulkFiles = useCallback((files: FileList) => {
-        const newFiles: UploadedFile[] = Array.from(files).map((file) => ({
-            file,
-            id: Math.random().toString(36).substring(2),
-            status: 'pending',
-        }));
-        setBulkFiles((prev) => [...prev, ...newFiles]);
+        const valid: UploadedFile[] = [];
+        const skipped: string[] = [];
+
+        Array.from(files).forEach((file) => {
+            if (!ALLOWED_TYPES.includes(file.type)) {
+                skipped.push(`${file.name} (unsupported type)`);
+                return;
+            }
+            if (file.size > MAX_FILE_SIZE) {
+                skipped.push(`${file.name} (exceeds 50 MB)`);
+                return;
+            }
+            valid.push({ file, id: Math.random().toString(36).substring(2), status: 'pending' });
+        });
+
+        setBulkFiles((prev) => {
+            const merged = [...prev, ...valid];
+            if (merged.length > MAX_BULK_FILES) {
+                alert(`Bulk limit is ${MAX_BULK_FILES} images. Only the first ${MAX_BULK_FILES} were added.`);
+                return merged.slice(0, MAX_BULK_FILES);
+            }
+            if (skipped.length > 0) {
+                alert(`Skipped ${skipped.length} file(s):\n${skipped.slice(0, 5).join('\n')}${skipped.length > 5 ? `\n…and ${skipped.length - 5} more` : ''}`);
+            }
+            return merged;
+        });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleBulkInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -135,8 +162,9 @@ export default function IssuancePage() {
             try {
                 const formData = new FormData();
                 formData.append('image', f.file);
-                formData.append('productName', f.file.name.replace(/\.[^.]+$/, ''));
-                formData.append('batchId', 'BULK');
+                const pName = bulkProductName.trim() !== '' ? bulkProductName : f.file.name.replace(/\.[^.]+$/, '');
+                formData.append('productName', pName);
+                formData.append('batchId', bulkBatchId || 'BULK');
 
                 const res = await fetch('/api/certify', { method: 'POST', body: formData });
                 const data = await res.json();
@@ -236,11 +264,11 @@ export default function IssuancePage() {
 
                     {step === 1 && (
                         <div className={styles.issuanceContent}>
-                            <input type="file" ref={singleFileRef} style={{ display: 'none' }} accept=".jpg,.jpeg,.png,.webp" onChange={handleSingleFileSelect} />
+                            <input type="file" ref={singleFileRef} style={{ display: 'none' }} accept=".jpg,.jpeg,.png,.webp,.tiff,.tif" onChange={handleSingleFileSelect} />
                             <div className={styles.uploadArea}>
                                 <Upload size={48} opacity={0.2} />
                                 <p>Drag and drop your product photo</p>
-                                <span>Supports .JPG, .PNG, .WEBP (Max 50MB)</span>
+                                <span>Supports .JPG, .PNG, .WEBP, .TIFF (Max 50MB)</span>
                                 <button className={styles.browseBtn} onClick={() => singleFileRef.current?.click()}>Browse Files</button>
                             </div>
                         </div>
@@ -308,7 +336,7 @@ export default function IssuancePage() {
                 <div className={styles.issuanceContent}>
                     {bulkStep === 'upload' && (
                         <>
-                            <input type="file" ref={bulkFileRef} style={{ display: 'none' }} accept=".jpg,.jpeg,.png,.webp" multiple onChange={handleBulkInputChange} />
+                            <input type="file" ref={bulkFileRef} style={{ display: 'none' }} accept=".jpg,.jpeg,.png,.webp,.tiff,.tif" multiple onChange={handleBulkInputChange} />
                             <div
                                 className={styles.uploadArea}
                                 style={{ borderColor: isDragging ? 'var(--accent-color)' : undefined, background: isDragging ? 'var(--accent-light)' : undefined }}
@@ -318,12 +346,26 @@ export default function IssuancePage() {
                             >
                                 <Layers size={48} opacity={0.2} />
                                 <p>Drag &amp; drop multiple product images</p>
-                                <span>Supports .JPG, .PNG, .WEBP — no limit on quantity</span>
+                                <span>Supports .JPG, .PNG, .WEBP, .TIFF — up to {MAX_BULK_FILES} images, 50 MB each</span>
                                 <button className={styles.browseBtn} onClick={() => bulkFileRef.current?.click()}>Browse Files</button>
                             </div>
 
                             {bulkFiles.length > 0 && (
                                 <>
+                                    <div style={{ marginTop: '1.5rem', padding: '1.5rem', background: 'var(--accent-light)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
+                                        <h4 style={{ marginBottom: '1rem', fontSize: '0.95rem' }}>Bulk Metadata Settings</h4>
+                                        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                                            <div className={styles.formGroup} style={{ flex: '1 1 200px' }}>
+                                                <label>Global Product Name (Optional)</label>
+                                                <input type="text" placeholder="Uses original filenames if empty" value={bulkProductName} onChange={(e) => setBulkProductName(e.target.value)} />
+                                            </div>
+                                            <div className={styles.formGroup} style={{ flex: '1 1 200px' }}>
+                                                <label>Batch / SKU ID</label>
+                                                <input type="text" placeholder="BULK-BATCH-1" value={bulkBatchId} onChange={(e) => setBulkBatchId(e.target.value)} />
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                         {bulkFiles.map((f) => (
                                             <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.6rem 0.9rem', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.85rem' }}>

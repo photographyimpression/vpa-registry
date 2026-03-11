@@ -1,4 +1,4 @@
-import { Key, Copy, RefreshCw, ShieldCheck, Zap } from 'lucide-react';
+import { Copy, RefreshCw, ShieldCheck, Zap } from 'lucide-react';
 import styles from '../Dashboard.module.css';
 
 export default function ApiPage() {
