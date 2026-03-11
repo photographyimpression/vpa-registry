@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import CommandPalette from '@/components/CommandPalette';
+import CookieBanner from '@/components/CookieBanner';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 const playfair = Playfair_Display({
@@ -51,6 +52,7 @@ export default function RootLayout({
         <CommandPalette />
         {children}
         <Footer />
+        <CookieBanner />
       </body>
     </html>
   );
