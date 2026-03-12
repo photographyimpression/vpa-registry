@@ -22,7 +22,7 @@
         },
         {
             "parameters": {
-                "jsCode": "// ── Extract fields from the incoming request ──────────────────────────\nconst body = $input.first().json.body || $input.first().json;\n\nconst vpaId          = body.vpaId         || 'VPA-UNKNOWN';\nconst productName    = body.productName   || 'Unknown Product';\nconst batchId        = body.batchId       || 'N/A';\nconst issueDate      = body.issueDate     || new Date().toISOString().split('T')[0];\nconst registryUrl    = body.registryUrl   || `https://vparegistry.com/id/${vpaId}`;\nconst certifiedImageBase64 = body.certifiedImageBase64 || '';\n\nreturn [{\n  json: { vpaId, productName, batchId, issueDate, registryUrl, certifiedImageBase64 }\n}];"
+                "jsCode": "// ── Extract fields from the incoming request ──────────────────────────\nconst body = $input.first().json.body || $input.first().json;\n\nconst vpaId               = body.vpaId            || 'VPA-UNKNOWN';\nconst productName         = body.productName      || 'Unknown Product';\nconst manufacturerName    = body.manufacturerName || 'Unknown Manufacturer';\nconst deviceMetadata      = body.deviceMetadata   || body.batchId || 'N/A';\nconst batchId             = body.batchId          || 'N/A';\nconst issueDate           = body.issueDate        || new Date().toISOString().split('T')[0];\nconst registryUrl         = body.registryUrl      || `https://vparegistry.com/id/${vpaId}`;\nconst certifiedImageBase64 = body.certifiedImageBase64 || '';\n\nreturn [{\n  json: { vpaId, productName, manufacturerName, deviceMetadata, batchId, issueDate, registryUrl, certifiedImageBase64 }\n}];"
             },
             "id": "node-extract",
             "name": "🔍 Extract & Validate Data",
@@ -82,7 +82,7 @@
                 "operation": "append",
                 "documentId": {
                     "__rl": true,
-                    "value": "YOUR_GOOGLE_SHEET_ID_HERE",
+                    "value": "1jfS2hEGn-yurcKggp0vqdxro3_NZ2UWVRKODfxemJzQ",
                     "mode": "id"
                 },
                 "sheetName": {
@@ -95,8 +95,8 @@
                     "value": {
                         "VPA_Tracking_ID": "={{ $('🔍 Extract & Validate Data').item.json.vpaId }}",
                         "Cert_Issue_Date": "={{ $('🔍 Extract & Validate Data').item.json.issueDate }}",
-                        "Manufacturer_Name": "={{ $('🔍 Extract & Validate Data').item.json.productName }}",
-                        "Device_Metadata": "={{ 'Batch: ' + $('🔍 Extract & Validate Data').item.json.batchId }}",
+                        "Manufacturer_Name": "={{ $('🔍 Extract & Validate Data').item.json.manufacturerName }}",
+                        "Device_Metadata": "={{ $('🔍 Extract & Validate Data').item.json.deviceMetadata }}",
                         "Master_Image_URL": "={{ $json.webViewLink || $('🔍 Extract & Validate Data').item.json.registryUrl }}",
                         "Product_Name": "={{ $('🔍 Extract & Validate Data').item.json.productName }}",
                         "Certified_Image_URL": "={{ $json.webViewLink || '' }}"

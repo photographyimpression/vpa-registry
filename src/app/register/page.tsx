@@ -3,61 +3,134 @@
 import styles from '@/app/Home.module.css';
 import authStyles from '@/app/login/Auth.module.css';
 import Link from 'next/link';
-import { ArrowLeft, Building2 } from 'lucide-react';
-import { signIn } from 'next-auth/react';
+import { ArrowLeft, Building2, User, Mail, CheckCircle2, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Register() {
-    const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+    const [submitted, setSubmitted] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [company, setCompany] = useState('');
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
 
-    const handleGoogleSignUp = async () => {
-        setIsGoogleLoading(true);
-        await signIn('google', { callbackUrl: '/dashboard' });
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setError(null);
+        try {
+            const res = await fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ company, name, email }),
+            });
+            const data = await res.json() as { success?: boolean; error?: string };
+            if (!res.ok || !data.success) {
+                setError(data.error ?? 'Something went wrong. Please try again.');
+                return;
+            }
+            setSubmitted(true);
+        } catch {
+            setError('Network error. Please check your connection and try again.');
+        } finally {
+            setLoading(false);
+        }
     };
+
+    if (submitted) {
+        return (
+            <main className={styles.mainContainer} style={{ justifyContent: 'center', alignItems: 'center' }}>
+                <div className={authStyles.authVault} style={{ textAlign: 'center' }}>
+                    <CheckCircle2 size={56} style={{ color: 'var(--accent-color)', margin: '0 auto 1.5rem' }} />
+                    <h1 className={authStyles.authTitle}>Application Received</h1>
+                    <p className={authStyles.authSubtitle} style={{ marginTop: '0.75rem' }}>
+                        Thank you, <strong>{name}</strong>. We&apos;ve received your access request for <strong>{company}</strong> and will be in touch at <strong>{email}</strong> within 2 business days.
+                    </p>
+                    <Link href="/" className={styles.ctaBtn} style={{ display: 'inline-flex', marginTop: '2rem', background: 'transparent', color: 'var(--foreground)', border: '1px solid var(--border-color)' }}>
+                        <ArrowLeft size={16} /> Return to Registry
+                    </Link>
+                </div>
+            </main>
+        );
+    }
 
     return (
         <main className={styles.mainContainer} style={{ justifyContent: 'center', alignItems: 'center' }}>
             <div className={authStyles.authVault}>
                 <div className={authStyles.authHeader}>
                     <Building2 size={48} className={authStyles.authIcon} />
-                    <h1 className={authStyles.authTitle}>Get Started</h1>
-                    <p className={authStyles.authSubtitle}>Create your Enterprise Issuance account.</p>
+                    <h1 className={authStyles.authTitle}>Request Access</h1>
+                    <p className={authStyles.authSubtitle}>Apply for a VPA partner account. We&apos;ll review your application and respond within 2 business days.</p>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginTop: '2rem' }}>
-                    <p style={{ textAlign: 'center', opacity: 0.8, fontSize: '0.95rem', lineHeight: 1.5 }}>
-                        To maintain standard compliance, all new issuers must authenticate via a verified Google Organization account.
-                    </p>
-                    
+                <form className={authStyles.authForm} onSubmit={handleSubmit}>
+                    <div className={authStyles.inputGroup}>
+                        <label htmlFor="company">Organization Name</label>
+                        <div className={authStyles.inputWrapper}>
+                            <Building2 size={18} className={authStyles.inputIcon} />
+                            <input
+                                type="text"
+                                id="company"
+                                placeholder="Acme Corp"
+                                required
+                                value={company}
+                                onChange={(e) => setCompany(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    <div className={authStyles.inputGroup}>
+                        <label htmlFor="name">Full Name</label>
+                        <div className={authStyles.inputWrapper}>
+                            <User size={18} className={authStyles.inputIcon} />
+                            <input
+                                type="text"
+                                id="name"
+                                placeholder="John Doe"
+                                required
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    <div className={authStyles.inputGroup}>
+                        <label htmlFor="email">Work Email</label>
+                        <div className={authStyles.inputWrapper}>
+                            <Mail size={18} className={authStyles.inputIcon} />
+                            <input
+                                type="email"
+                                id="email"
+                                placeholder="name@organization.com"
+                                required
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    {error && (
+                        <p style={{ color: '#ef4444', fontSize: '0.85rem', textAlign: 'center' }}>{error}</p>
+                    )}
+
                     <button
-                        type="button"
-                        className={authStyles.googleBtn}
-                        onClick={handleGoogleSignUp}
-                        disabled={isGoogleLoading}
+                        type="submit"
+                        className={authStyles.authSubmitBtn}
+                        style={{ marginTop: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                        disabled={loading}
                     >
-                        {isGoogleLoading ? (
-                            <span style={{ opacity: 0.7 }}>Redirecting...</span>
-                        ) : (
-                            <>
-                                <svg className={authStyles.googleIcon} viewBox="0 0 24 24">
-                                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-                                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05" />
-                                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-                                </svg>
-                                Authenticate via Google
-                            </>
-                        )}
+                        {loading ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Submitting…</> : 'Submit Application'}
                     </button>
-                </div>
+                </form>
 
-                <div className={authStyles.authFooter} style={{ marginTop: '3rem' }}>
+                <div className={authStyles.authFooter}>
                     <p>Already have an account? <Link href="/login">Sign In</Link></p>
                     <Link href="/" className={authStyles.backLink}>
                         <ArrowLeft size={14} /> Back to Registry
                     </Link>
                 </div>
             </div>
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </main>
     );
 }

@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import CommandPalette from '@/components/CommandPalette';
 import CookieBanner from '@/components/CookieBanner';
+import SessionProviderWrapper from '@/components/SessionProviderWrapper';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 const playfair = Playfair_Display({
@@ -48,11 +49,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${playfair.variable} ${robotoMono.variable}`}>
-        <Navbar />
-        <CommandPalette />
-        {children}
-        <Footer />
-        <CookieBanner />
+        <SessionProviderWrapper>
+          <Navbar />
+          <CommandPalette />
+          {children}
+          <Footer />
+          <CookieBanner />
+        </SessionProviderWrapper>
       </body>
     </html>
   );

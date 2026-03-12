@@ -64,7 +64,7 @@ export default function Home() {
         <div className={styles.heroContent}>
           <div className={styles.badge}>
             <span className={styles.badgeHighlight}>New</span>
-            <span>VPA Network v4.1 — Now globally available</span>
+            <span>VPA Registry — Now accepting partners</span>
           </div>
           <h1 className={`${styles.heroTitle} ${styles.reveal}`}>
             The global standard in <br />
@@ -93,7 +93,7 @@ export default function Home() {
               <div className={styles.dots}>
                 <span></span><span></span><span></span>
               </div>
-              <div className={styles.urlBar}>registry.vpa.gov/verify</div>
+              <div className={styles.urlBar}>vparegistry.com/verify</div>
             </div>
             <div className={styles.mockupBody}>
               <div className={styles.mockSkeletonImage}></div>
@@ -117,23 +117,22 @@ export default function Home() {
           <div className={`${styles.bentoCard} ${styles.reveal}`} style={{ transitionDelay: '0.1s' }}>
             <Zap size={32} className={styles.featureIcon} />
             <h3>Instant Verification</h3>
-            <p>Lookup any item in milliseconds via our globally distributed edge network.</p>
+            <p>Scan any VPA QR code to instantly confirm a product&apos;s authenticity against our central registry.</p>
           </div>
           <div className={`${styles.featureCard} ${styles.reveal}`} style={{ transitionDelay: '0.2s' }}>
             <div className={styles.featureIcon}>
               <Globe size={24} />
             </div>
-            <h3>Global Trust Network</h3>
-            <p>Our verification nodes are distributed across neutral jurisdictions, ensuring cross-border legal recognition.</p>
+            <h3>Global Registry</h3>
+            <p>Certificates are publicly verifiable by anyone, anywhere — giving buyers confidence regardless of where they shop.</p>
           </div>
 
           <div className={`${styles.featureCard} ${styles.trustCard} ${styles.reveal}`} style={{ transitionDelay: '0.3s' }}>
             <div className={styles.featureIcon} style={{ background: 'var(--accent-light)' }}>
               <ShieldCheck size={24} />
             </div>
-            <h3>ISO/IEC 27001 Compliant</h3>
-            <p>The VPA Registry operates under the strictest international standards for information security management.</p>
-            <div className={styles.isoBadge}>GOVERNANCE ACT 2024-B</div>
+            <h3>Partner-Only Issuance</h3>
+            <p>Only verified brand partners can issue certificates, ensuring every VPA ID traces back to a legitimate source.</p>
           </div>
         </div>
       </section>

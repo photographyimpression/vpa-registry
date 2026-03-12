@@ -1,11 +1,18 @@
 import { NextResponse } from 'next/server';
+import { auth } from '@/auth';
 import { getAllCertificates } from '@/lib/data';
 
 /**
  * GET /api/dashboard
  * Returns real certificate stats and recent records from Google Sheets.
+ * Requires an active partner session.
  */
 export async function GET() {
+    const session = await auth();
+    if (!session?.user) {
+        return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
     try {
         const records = await getAllCertificates();
 

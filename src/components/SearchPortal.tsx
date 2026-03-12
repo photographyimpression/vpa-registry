@@ -72,7 +72,7 @@ export default function SearchPortal() {
                 </button>
             </form>
             <div className={styles.helpText}>
-                <p>Example: DEMO-123</p>
+                <p>Example: VPA-AB3CDE-5678</p>
             </div>
             {/* Screen Reader Announcements */}
             <div className="sr-only" role="status" aria-live="polite">
