@@ -55,10 +55,11 @@ async function checkRateLimit(userId: string): Promise<boolean> {
 // make/model; AI-generated images typically have no EXIF at all.
 // Controlled by AI_DETECTION_MODE env var: off (default) | warn | reject
 type AiDetectionMode = 'off' | 'warn' | 'reject';
-const AI_DETECTION_MODE = (process.env.AI_DETECTION_MODE ?? 'off') as AiDetectionMode;
 
-async function checkForAiGenerated(buf: Buffer, mimeType: string): Promise<string | null> {
-    if (AI_DETECTION_MODE === 'off') return null;
+export async function checkForAiGenerated(buf: Buffer, mimeType: string): Promise<string | null> {
+    // Read env var at call-time so it picks up runtime overrides (test env, hot config)
+    const mode = (process.env.AI_DETECTION_MODE ?? 'off') as AiDetectionMode;
+    if (mode === 'off') return null;
     // Only JPEG and TIFF reliably carry camera EXIF — skip PNG/WebP
     if (mimeType !== 'image/jpeg' && mimeType !== 'image/tiff') return null;
     const meta = await sharp(buf).metadata();
@@ -69,7 +70,7 @@ async function checkForAiGenerated(buf: Buffer, mimeType: string): Promise<strin
 }
 
 // ── Magic-bytes image type detection ─────────────────────────────────────────
-function detectImageMagicBytes(buf: Buffer): string | null {
+export function detectImageMagicBytes(buf: Buffer): string | null {
     if (buf.length < 12) return null;
     if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return 'image/jpeg';
     if (buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) return 'image/png';
@@ -150,7 +151,7 @@ export async function POST(req: NextRequest) {
         // ── AI image detection ──────────────────────────────────────────────
         const aiReason = await checkForAiGenerated(rawBuffer, detectedType);
         if (aiReason) {
-            if (AI_DETECTION_MODE === 'reject') {
+            if ((process.env.AI_DETECTION_MODE ?? 'off') === 'reject') {
                 return NextResponse.json({ error: aiReason }, { status: 422 });
             }
             console.warn(`[VPA Certify] AI detection warning (${userId}): ${aiReason}`);
@@ -189,8 +190,14 @@ export async function POST(req: NextRequest) {
                 });
 
                 if (n8nRes.ok) {
-                    const n8nData = await n8nRes.json();
-                    certifiedImageUrl = n8nData.certifiedImageUrl || '';
+                    const body = await n8nRes.text();
+                    if (body) {
+                        try {
+                            certifiedImageUrl = JSON.parse(body).certifiedImageUrl || '';
+                        } catch {
+                            console.warn('[VPA Certify] n8n returned non-JSON response');
+                        }
+                    }
                 } else {
                     console.warn(`[VPA Certify] n8n returned ${n8nRes.status} — proceeding without storage URL`);
                 }
