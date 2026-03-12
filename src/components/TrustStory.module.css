@@ -48,7 +48,7 @@
 .storyGrid {
     display: flex;
     flex-direction: column;
-    gap: 12rem;
+    gap: 6rem;
 }
 
 .storyStep {
@@ -211,18 +211,22 @@
     }
 
     .storyGrid {
-        gap: 8rem;
+        gap: 5rem;
     }
 }
 
-/* Animations */
-.storyStep {
-    opacity: 0;
-    transform: translateY(40px);
-    transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+/* Staggered fade-in using animation-delay — always plays, always visible */
+@keyframes fadeUpIn {
+    from {
+        opacity: 0;
+        transform: translateY(32px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.storyStepVisible {
-    opacity: 1;
-    transform: translateY(0);
+.storyStep {
+    animation: fadeUpIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
 }

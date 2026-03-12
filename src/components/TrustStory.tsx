@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { ShoppingCart, ShieldCheck, Heart } from 'lucide-react';
 import styles from './TrustStory.module.css';
@@ -37,25 +36,8 @@ const partners = [
 ];
 
 export default function TrustStory() {
-    const sectionRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add(styles.storyStepVisible);
-                }
-            });
-        }, { threshold: 0.2 });
-
-        const steps = sectionRef.current?.querySelectorAll(`.${styles.storyStep}`);
-        steps?.forEach(step => observer.observe(step));
-
-        return () => observer.disconnect();
-    }, []);
-
     return (
-        <section className={styles.storySection} ref={sectionRef}>
+        <section className={styles.storySection}>
             <div className={styles.container}>
                 <div className={styles.header}>
                     <h2 className={styles.title}>
@@ -68,7 +50,7 @@ export default function TrustStory() {
 
                 <div className={styles.storyGrid}>
                     {storySteps.map((step, index) => (
-                        <div key={index} className={styles.storyStep}>
+                        <div key={index} className={styles.storyStep} style={{ animationDelay: `${index * 0.2}s` }}>
                             <div className={styles.visualWrapper}>
                                 <Image
                                     src={step.image}
