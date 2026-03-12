@@ -12,6 +12,8 @@
     "@types/openseadragon": "^5.0.2",
     "@types/papaparse": "^5.5.2",
     "@types/qrcode": "^1.5.6",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.36.4",
     "lucide-react": "^0.575.0",
     "next": "16.1.6",
     "next-auth": "5.0.0-beta.25",
@@ -28,6 +30,8 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "node-addon-api": "^8.6.0",
+    "node-gyp": "^12.2.0",
     "typescript": "^5"
   }
 }

@@ -4,6 +4,17 @@ import QRCode from 'qrcode';
 
 export const maxDuration = 60;
 
+// Shared secret for n8n → /api/watermark calls.
+// Set WATERMARK_SECRET in your environment and configure n8n to send it as
+// the X-VPA-Watermark-Secret request header.
+// If the env var is unset the endpoint is open (backwards-compat / local dev).
+const WATERMARK_SECRET = process.env.WATERMARK_SECRET;
+
+function isAuthorized(req: NextRequest): boolean {
+    if (!WATERMARK_SECRET) return true; // not configured — open
+    return req.headers.get('x-vpa-watermark-secret') === WATERMARK_SECRET;
+}
+
 /**
  * GET /api/watermark?imageUrl=...&vpaId=...
  *
@@ -14,6 +25,9 @@ export const maxDuration = 60;
  * Also accepts POST with JSON body { imageUrl, vpaId }
  */
 export async function GET(req: NextRequest) {
+    if (!isAuthorized(req)) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const { searchParams } = new URL(req.url);
     const imageUrl = searchParams.get('imageUrl');
     const vpaId = searchParams.get('vpaId');
@@ -21,6 +35,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+    if (!isAuthorized(req)) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const body = await req.json();
     return processWatermark(body.imageUrl, body.vpaId);
 }
