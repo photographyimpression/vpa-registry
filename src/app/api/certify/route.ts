@@ -117,6 +117,8 @@ export async function POST(req: NextRequest) {
         const file = formData.get('image') as File | null;
         const productName = (formData.get('productName') as string) || 'Unknown Product';
         const batchId = (formData.get('batchId') as string) || 'N/A';
+        const manufacturerName = (formData.get('manufacturerName') as string) || session.user.name || session.user.email || 'Unknown Manufacturer';
+        const deviceMetadata = (formData.get('deviceMetadata') as string) || batchId;
 
         if (!file) {
             return NextResponse.json({ error: 'No image file provided' }, { status: 400 });
@@ -179,6 +181,8 @@ export async function POST(req: NextRequest) {
                     body: JSON.stringify({
                         vpaId,
                         productName,
+                        manufacturerName,
+                        deviceMetadata,
                         batchId,
                         issueDate,
                         fileName: file.name,
