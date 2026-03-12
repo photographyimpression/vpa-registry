@@ -3,18 +3,38 @@
 import styles from '@/app/Home.module.css';
 import authStyles from '@/app/login/Auth.module.css';
 import Link from 'next/link';
-import { ArrowLeft, Building2, User, Mail, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Building2, User, Mail, CheckCircle2, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Register() {
     const [submitted, setSubmitted] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [company, setCompany] = useState('');
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setSubmitted(true);
+        setLoading(true);
+        setError(null);
+        try {
+            const res = await fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ company, name, email }),
+            });
+            const data = await res.json() as { success?: boolean; error?: string };
+            if (!res.ok || !data.success) {
+                setError(data.error ?? 'Something went wrong. Please try again.');
+                return;
+            }
+            setSubmitted(true);
+        } catch {
+            setError('Network error. Please check your connection and try again.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     if (submitted) {
@@ -89,8 +109,17 @@ export default function Register() {
                         </div>
                     </div>
 
-                    <button type="submit" className={authStyles.authSubmitBtn} style={{ marginTop: '1.5rem' }}>
-                        Submit Application
+                    {error && (
+                        <p style={{ color: '#ef4444', fontSize: '0.85rem', textAlign: 'center' }}>{error}</p>
+                    )}
+
+                    <button
+                        type="submit"
+                        className={authStyles.authSubmitBtn}
+                        style={{ marginTop: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                        disabled={loading}
+                    >
+                        {loading ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Submitting…</> : 'Submit Application'}
                     </button>
                 </form>
 
@@ -101,6 +130,7 @@ export default function Register() {
                     </Link>
                 </div>
             </div>
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </main>
     );
 }

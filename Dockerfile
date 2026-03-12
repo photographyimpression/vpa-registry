@@ -2,7 +2,8 @@ FROM node:20-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
-RUN apk add --no-cache libc6-compat vips-dev
+# vips-dev: sharp image processing; python3/make/g++: node-gyp for native builds
+RUN apk add --no-cache libc6-compat vips-dev python3 make g++
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
@@ -10,9 +11,14 @@ RUN npm install --legacy-peer-deps
 
 # Rebuild the source code only when needed
 FROM base AS builder
+# vips needed at build time for sharp
+RUN apk add --no-cache vips-dev python3 make g++
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+
+# Disable telemetry during build
+ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN npm run build
 
