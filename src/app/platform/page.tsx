@@ -25,7 +25,7 @@ export default function Platform() {
                         alt="VPA Platform Dashboard"
                         width={800}
                         height={600}
-                        layout="responsive"
+                        style={{ width: '100%', height: 'auto' }}
                     />
                 </div>
                 <div>

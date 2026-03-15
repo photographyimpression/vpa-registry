@@ -4,15 +4,41 @@ import { signIn } from 'next-auth/react';
 import styles from '@/app/Home.module.css';
 import authStyles from './Auth.module.css';
 import Link from 'next/link';
-import { ArrowLeft, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, Mail, Lock } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Login() {
     const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+    const [isEmailLoading, setIsEmailLoading] = useState(false);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [emailError, setEmailError] = useState('');
 
     const handleGoogleSignIn = async () => {
         setIsGoogleLoading(true);
         await signIn('google', { callbackUrl: '/dashboard' });
+    };
+
+    const handleEmailSignIn = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsEmailLoading(true);
+        setEmailError('');
+
+        const result = await signIn('credentials', {
+            email,
+            password,
+            callbackUrl: '/dashboard',
+            redirect: false,
+        });
+
+        if (result?.error) {
+            setEmailError('Invalid email or password. Contact your account manager if you need access.');
+            setIsEmailLoading(false);
+        } else if (result?.url) {
+            window.location.href = result.url;
+        } else {
+            setIsEmailLoading(false);
+        }
     };
 
     return (
@@ -20,17 +46,18 @@ export default function Login() {
             <div className={authStyles.authVault}>
                 <div className={authStyles.authHeader}>
                     <ShieldCheck size={48} className={authStyles.authIcon} />
-                    <h1 className={authStyles.authTitle}>Sign In</h1>
+                    <h1 className={authStyles.authTitle}>Partner Sign In</h1>
                     <p className={authStyles.authSubtitle}>Access the VPA Central Registry portal.</p>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginTop: '2rem' }}>
+                    {/* Google Sign-In */}
                     <button
                         type="button"
                         id="google-signin-btn"
                         className={authStyles.googleBtn}
                         onClick={handleGoogleSignIn}
-                        disabled={isGoogleLoading}
+                        disabled={isGoogleLoading || isEmailLoading}
                     >
                         {isGoogleLoading ? (
                             <span style={{ opacity: 0.7 }}>Redirecting to Google...</span>
@@ -46,16 +73,69 @@ export default function Login() {
                             </>
                         )}
                     </button>
-                    
-                    <p style={{ textAlign: 'center', opacity: 0.6, fontSize: '0.85rem' }}>
-                        Enterprise SSO using active directory integration is managed via your Technical Account Manager.
-                    </p>
+
+                    {/* Divider */}
+                    <div className={authStyles.authDivider}>
+                        <span>or sign in with email</span>
+                    </div>
+
+                    {/* Email / Password Sign-In */}
+                    <form onSubmit={handleEmailSignIn} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <div className={authStyles.inputGroup}>
+                            <label htmlFor="signin-email">Email Address</label>
+                            <div className={authStyles.inputWrapper}>
+                                <Mail size={18} className={authStyles.inputIcon} />
+                                <input
+                                    id="signin-email"
+                                    type="email"
+                                    placeholder="name@organization.com"
+                                    required
+                                    autoComplete="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    disabled={isGoogleLoading || isEmailLoading}
+                                />
+                            </div>
+                        </div>
+
+                        <div className={authStyles.inputGroup}>
+                            <label htmlFor="signin-password">Password</label>
+                            <div className={authStyles.inputWrapper}>
+                                <Lock size={18} className={authStyles.inputIcon} />
+                                <input
+                                    id="signin-password"
+                                    type="password"
+                                    placeholder="••••••••"
+                                    required
+                                    autoComplete="current-password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    disabled={isGoogleLoading || isEmailLoading}
+                                />
+                            </div>
+                        </div>
+
+                        {emailError && (
+                            <p style={{ color: '#ef4444', fontSize: '0.82rem', padding: '0.65rem 0.9rem', background: 'rgba(239,68,68,0.07)', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.18)', margin: 0 }}>
+                                {emailError}
+                            </p>
+                        )}
+
+                        <button
+                            type="submit"
+                            className={authStyles.authSubmitBtn}
+                            disabled={isGoogleLoading || isEmailLoading}
+                            style={{ marginTop: '0.25rem' }}
+                        >
+                            {isEmailLoading ? 'Signing in…' : 'Sign In'}
+                        </button>
+                    </form>
                 </div>
 
-                <div className={styles.authFooter} style={{ marginTop: '3rem' }}>
+                <div className={authStyles.authFooter} style={{ marginTop: '3rem' }}>
                     <p>Secured by <strong>VPA AUTHORITY PROTOCOL</strong></p>
-                    <p>Don&apos;t have an account? <Link href="/register">Inquire for Access</Link></p>
-                    <Link href="/" className={styles.backLink}>
+                    <p>Don&apos;t have an account? <Link href="/register">Request Access</Link></p>
+                    <Link href="/" className={authStyles.backLink}>
                         <ArrowLeft size={16} /> Back to Registry
                     </Link>
                 </div>
