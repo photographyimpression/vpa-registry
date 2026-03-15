@@ -42,7 +42,7 @@ export default function Solutions() {
                         alt="VPA Industry Solutions"
                         width={800}
                         height={600}
-                        layout="responsive"
+                        style={{ width: '100%', height: 'auto' }}
                     />
                 </div>
             </div>

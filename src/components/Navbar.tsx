@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ShieldCheck, User, Menu, X, Globe } from 'lucide-react';
+import { ShieldCheck, User, Menu, X } from 'lucide-react';
 import styles from './Navbar.module.css';
 
 export default function Navbar() {
@@ -46,10 +46,6 @@ export default function Navbar() {
                 </div>
 
                 <div className={styles.navActions}>
-                    <div className={styles.langSelector}>
-                        <Globe size={16} />
-                        <span>EN</span>
-                    </div>
                     <Link href="/login" className={`${styles.loginBtn} magnetic`}>
                         <User size={18} strokeWidth={1.5} />
                         Partner Login

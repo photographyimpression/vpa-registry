@@ -9,7 +9,7 @@ export const maxDuration = 60;
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/tiff'];
 const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
-const N8N_TIMEOUT_MS = 15_000; // 15 s — don't hang the request if n8n is slow
+const N8N_TIMEOUT_MS = 5_000; // 5 s max — n8n is fire-and-forget; don't hang the request
 
 // ── Rate limiting ─────────────────────────────────────────────────────────────
 // Uses Upstash Redis when UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN are
@@ -169,49 +169,36 @@ export async function POST(req: NextRequest) {
         const watermarkedBuffer = await applyWatermark(rawBuffer, vpaId);
         const certifiedImageBase64 = watermarkedBuffer.toString('base64');
 
-        // ── 3. Call n8n webhook (async record-keeping) ──────────────────────
-        let certifiedImageUrl = '';
+        // ── 3. Fire-and-forget: notify n8n for record-keeping ──────────────
+        // We do NOT await this — the client receives the certificate immediately.
+        // n8n handles persistence (Google Sheets, storage) asynchronously.
         const webhookUrl = process.env.N8N_CERTIFICATION_WEBHOOK_URL;
 
         if (webhookUrl) {
-            try {
-                const n8nRes = await fetch(webhookUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        vpaId,
-                        productName,
-                        manufacturerName,
-                        deviceMetadata,
-                        batchId,
-                        issueDate,
-                        fileName: file.name,
-                        registryUrl,
-                        // Send watermarked image as base64 for n8n to store
-                        certifiedImageBase64,
-                    }),
-                    signal: AbortSignal.timeout(N8N_TIMEOUT_MS),
-                });
-
-                if (n8nRes.ok) {
-                    const body = await n8nRes.text();
-                    if (body) {
-                        try {
-                            certifiedImageUrl = JSON.parse(body).certifiedImageUrl || '';
-                        } catch {
-                            console.warn('[VPA Certify] n8n returned non-JSON response');
-                        }
-                    }
-                } else {
-                    console.warn(`[VPA Certify] n8n returned ${n8nRes.status} — proceeding without storage URL`);
-                }
-            } catch (n8nErr) {
-                // Don't fail the whole request if n8n is unreachable
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    vpaId,
+                    productName,
+                    manufacturerName,
+                    deviceMetadata,
+                    batchId,
+                    issueDate,
+                    fileName: file.name,
+                    registryUrl,
+                    certifiedImageBase64,
+                }),
+                signal: AbortSignal.timeout(N8N_TIMEOUT_MS),
+            }).catch((n8nErr) => {
+                // Non-fatal — log and continue; certification already succeeded
                 console.error('[VPA Certify] n8n webhook error (non-fatal):', n8nErr);
-            }
+            });
         } else {
             console.warn('[VPA Certify] N8N_CERTIFICATION_WEBHOOK_URL not set — certificate will not be persisted to Google Sheets.');
         }
+
+        const certifiedImageUrl = '';
 
         // ── 4. Return result to frontend ────────────────────────────────────
         return NextResponse.json({

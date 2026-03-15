@@ -1,11 +1,16 @@
 /**
  * Next.js Proxy — Auth Protection
  *
- * Protects all /dashboard routes via NextAuth v5.
- * Unauthenticated users are redirected to /login.
+ * Uses the edge-safe auth config (no Node.js-only packages like Stripe).
+ * Protects all /dashboard routes — unauthenticated users are redirected to /login.
  */
-export { auth as proxy } from "@/auth";
+import NextAuth from "next-auth"
+import { authConfig } from "@/auth.config"
+
+const { auth } = NextAuth(authConfig)
+
+export const proxy = auth
 
 export const config = {
     matcher: ["/dashboard/:path*"],
-};
+}

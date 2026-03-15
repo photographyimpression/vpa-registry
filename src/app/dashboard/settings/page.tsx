@@ -74,7 +74,7 @@ export default function SettingsPage() {
                         </div>
                     )}
                     <p style={{ opacity: 0.5, fontSize: '0.875rem' }}>
-                        Profile information is managed through your Google account.
+                        Profile information is managed through your sign-in provider. To update your name or profile picture, update your identity provider account.
                     </p>
                 </div>
 

@@ -17,11 +17,17 @@ type UploadedFile = {
 
 type Mode = 'single' | 'bulk';
 
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/tiff'];
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+const MAX_BULK_FILES = 100;
+const BULK_CONCURRENCY = 5; // process 5 images in parallel
+
 export default function IssuancePage() {
     const [mode, setMode] = useState<Mode>('single');
     const [step, setStep] = useState(1);
     const [isSealing, setIsSealing] = useState(false);
-    const [isDragging, setIsDragging] = useState(false);
+    const [isSingleDragging, setIsSingleDragging] = useState(false);
+    const [isBulkDragging, setIsBulkDragging] = useState(false);
     const [singleFile, setSingleFile] = useState<File | null>(null);
     const [result, setResult] = useState<{
         vpaId: string;
@@ -41,11 +47,28 @@ export default function IssuancePage() {
     const bulkFileRef = useRef<HTMLInputElement>(null);
 
     // ── SINGLE UPLOAD ────────────────────────────────────────────────────────
-    const handleSingleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files.length > 0) {
-            setSingleFile(e.target.files[0]);
-            setStep(2);
+    const pickSingleFile = (file: File) => {
+        if (!ALLOWED_TYPES.includes(file.type)) {
+            setErrorMsg(`Unsupported file type: ${file.type}. Please use JPG, PNG, WebP, or TIFF.`);
+            return;
         }
+        if (file.size > MAX_FILE_SIZE) {
+            setErrorMsg('File exceeds 50 MB limit.');
+            return;
+        }
+        setErrorMsg('');
+        setSingleFile(file);
+        setStep(2);
+    };
+
+    const handleSingleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) pickSingleFile(e.target.files[0]);
+    };
+
+    const handleSingleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsSingleDragging(false);
+        if (e.dataTransfer.files.length > 0) pickSingleFile(e.dataTransfer.files[0]);
     };
 
     const handleIssue = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -101,10 +124,6 @@ export default function IssuancePage() {
     };
 
     // ── BULK UPLOAD ──────────────────────────────────────────────────────────
-    const MAX_BULK_FILES = 100;
-    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/tiff'];
-    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
-
     const handleBulkFiles = useCallback((files: FileList) => {
         const valid: UploadedFile[] = [];
         const skipped: string[] = [];
@@ -123,25 +142,24 @@ export default function IssuancePage() {
 
         setBulkFiles((prev) => {
             const merged = [...prev, ...valid];
+            if (skipped.length > 0) {
+                alert(`Skipped ${skipped.length} file(s):\n${skipped.slice(0, 5).join('\n')}${skipped.length > 5 ? `\n…and ${skipped.length - 5} more` : ''}`);
+            }
             if (merged.length > MAX_BULK_FILES) {
                 alert(`Bulk limit is ${MAX_BULK_FILES} images. Only the first ${MAX_BULK_FILES} were added.`);
                 return merged.slice(0, MAX_BULK_FILES);
             }
-            if (skipped.length > 0) {
-                alert(`Skipped ${skipped.length} file(s):\n${skipped.slice(0, 5).join('\n')}${skipped.length > 5 ? `\n…and ${skipped.length - 5} more` : ''}`);
-            }
             return merged;
         });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleBulkInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) handleBulkFiles(e.target.files);
     };
 
-    const handleDrop = (e: React.DragEvent) => {
+    const handleBulkDrop = (e: React.DragEvent) => {
         e.preventDefault();
-        setIsDragging(false);
+        setIsBulkDragging(false);
         if (e.dataTransfer.files.length > 0) handleBulkFiles(e.dataTransfer.files);
     };
 
@@ -149,51 +167,62 @@ export default function IssuancePage() {
         setBulkFiles((prev) => prev.filter((f) => f.id !== id));
     };
 
+    /**
+     * Process bulk images with limited concurrency (BULK_CONCURRENCY in parallel).
+     * This is much faster than sequential processing for large batches while
+     * avoiding overwhelming the server with too many simultaneous requests.
+     */
     const sealAll = async () => {
         if (bulkFiles.length === 0) return;
         setBulkStep('processing');
 
-        for (let i = 0; i < bulkFiles.length; i++) {
-            const f = bulkFiles[i];
-            setBulkFiles((prev) =>
-                prev.map((item, idx) => (idx === i ? { ...item, status: 'sealing' } : item))
-            );
+        const snapshot = [...bulkFiles]; // stable reference for this run
+        const batchId = bulkBatchId || 'BULK';
+
+        // Mark all as pending to reset any previous state
+        setBulkFiles(snapshot.map(f => ({ ...f, status: 'pending' as const })));
+
+        async function processOne(f: UploadedFile, index: number) {
+            // Mark as sealing
+            setBulkFiles(prev => prev.map((item, idx) => idx === index ? { ...item, status: 'sealing' } : item));
 
             try {
                 const formData = new FormData();
                 formData.append('image', f.file);
                 const pName = bulkProductName.trim() !== '' ? bulkProductName : f.file.name.replace(/\.[^.]+$/, '');
                 formData.append('productName', pName);
-                formData.append('batchId', bulkBatchId || 'BULK');
+                formData.append('batchId', batchId);
 
                 const res = await fetch('/api/certify', { method: 'POST', body: formData });
                 const data = await res.json();
 
                 if (!res.ok) throw new Error(data.error || 'Failed');
 
-                setBulkFiles((prev) =>
-                    prev.map((item, idx) =>
-                        idx === i
-                            ? {
-                                ...item,
-                                status: 'done',
-                                certId: data.vpaId,
-                                certifiedImageBase64: data.certifiedImageBase64,
-                                registryUrl: data.registryUrl,
-                            }
-                            : item
-                    )
-                );
+                setBulkFiles(prev => prev.map((item, idx) =>
+                    idx === index
+                        ? { ...item, status: 'done', certId: data.vpaId, certifiedImageBase64: data.certifiedImageBase64, registryUrl: data.registryUrl }
+                        : item
+                ));
             } catch (err: unknown) {
-                setBulkFiles((prev) =>
-                    prev.map((item, idx) =>
-                        idx === i
-                            ? { ...item, status: 'error', errorMsg: err instanceof Error ? err.message : 'Error' }
-                            : item
-                    )
-                );
+                setBulkFiles(prev => prev.map((item, idx) =>
+                    idx === index
+                        ? { ...item, status: 'error', errorMsg: err instanceof Error ? err.message : 'Error' }
+                        : item
+                ));
             }
         }
+
+        // Run with concurrency limit
+        let i = 0;
+        async function runWorker() {
+            while (i < snapshot.length) {
+                const idx = i++;
+                await processOne(snapshot[idx], idx);
+            }
+        }
+
+        const workers = Array.from({ length: Math.min(BULK_CONCURRENCY, snapshot.length) }, runWorker);
+        await Promise.all(workers);
         setBulkStep('done');
     };
 
@@ -265,12 +294,31 @@ export default function IssuancePage() {
                     {step === 1 && (
                         <div className={styles.issuanceContent}>
                             <input type="file" ref={singleFileRef} style={{ display: 'none' }} accept=".jpg,.jpeg,.png,.webp,.tiff,.tif" onChange={handleSingleFileSelect} />
-                            <div className={styles.uploadArea}>
+                            <div
+                                className={styles.uploadArea}
+                                style={{
+                                    borderColor: isSingleDragging ? 'var(--accent-color)' : undefined,
+                                    background: isSingleDragging ? 'var(--accent-light)' : undefined,
+                                    cursor: 'pointer',
+                                }}
+                                onClick={() => singleFileRef.current?.click()}
+                                onDragOver={(e) => { e.preventDefault(); setIsSingleDragging(true); }}
+                                onDragLeave={() => setIsSingleDragging(false)}
+                                onDrop={handleSingleDrop}
+                            >
                                 <Upload size={48} opacity={0.2} />
-                                <p>Drag and drop your product photo</p>
+                                <p>Drag &amp; drop your product photo</p>
                                 <span>Supports .JPG, .PNG, .WEBP, .TIFF (Max 50MB)</span>
-                                <button className={styles.browseBtn} onClick={() => singleFileRef.current?.click()}>Browse Files</button>
+                                <button
+                                    className={styles.browseBtn}
+                                    onClick={(e) => { e.stopPropagation(); singleFileRef.current?.click(); }}
+                                >Browse Files</button>
                             </div>
+                            {errorMsg && (
+                                <p style={{ color: '#ef4444', fontSize: '0.85rem', padding: '0.75rem', background: 'rgba(239,68,68,0.08)', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.2)', marginTop: '1rem' }}>
+                                    ⚠ {errorMsg}
+                                </p>
+                            )}
                         </div>
                     )}
 
@@ -313,7 +361,7 @@ export default function IssuancePage() {
                                 {result.vpaId}
                             </code>
                             <p style={{ opacity: 0.55, fontSize: '0.82rem', marginBottom: '2rem' }}>
-                                The certified image below has a QR code and VPA badge stamped in the corners. Download it and use it on your product listings.
+                                The certified image has a QR code and VPA badge stamped in the corners. Download it and use it on your product listings.
                             </p>
                             <div className={styles.actionGrid}>
                                 <button className={styles.actionBtnPrimary} onClick={handleDownload} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
@@ -339,10 +387,10 @@ export default function IssuancePage() {
                             <input type="file" ref={bulkFileRef} style={{ display: 'none' }} accept=".jpg,.jpeg,.png,.webp,.tiff,.tif" multiple onChange={handleBulkInputChange} />
                             <div
                                 className={styles.uploadArea}
-                                style={{ borderColor: isDragging ? 'var(--accent-color)' : undefined, background: isDragging ? 'var(--accent-light)' : undefined }}
-                                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                                onDragLeave={() => setIsDragging(false)}
-                                onDrop={handleDrop}
+                                style={{ borderColor: isBulkDragging ? 'var(--accent-color)' : undefined, background: isBulkDragging ? 'var(--accent-light)' : undefined }}
+                                onDragOver={(e) => { e.preventDefault(); setIsBulkDragging(true); }}
+                                onDragLeave={() => setIsBulkDragging(false)}
+                                onDrop={handleBulkDrop}
                             >
                                 <Layers size={48} opacity={0.2} />
                                 <p>Drag &amp; drop multiple product images</p>
@@ -398,7 +446,7 @@ export default function IssuancePage() {
                                     {f.status === 'pending' && <span style={{ color: 'color-mix(in srgb, var(--foreground) 40%, transparent)', flexShrink: 0 }}>Queued</span>}
                                     {f.status === 'sealing' && <Loader2 size={16} className="animate-spin" style={{ flexShrink: 0, color: 'var(--accent-color)' }} />}
                                     {f.status === 'done' && <CheckCircle size={16} style={{ flexShrink: 0, color: '#10b981' }} />}
-                                    {f.status === 'error' && <span style={{ color: '#ef4444', fontSize: '0.75rem' }}>Error</span>}
+                                    {f.status === 'error' && <span style={{ color: '#ef4444', fontSize: '0.75rem' }}>{f.errorMsg || 'Error'}</span>}
                                 </div>
                             ))}
                         </div>
@@ -418,6 +466,9 @@ export default function IssuancePage() {
                                         <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', opacity: 0.7 }}>{f.file.name}</span>
                                         {f.status === 'done' && f.certId && (
                                             <code style={{ flexShrink: 0, color: 'var(--accent-color)', fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>{f.certId}</code>
+                                        )}
+                                        {f.status === 'error' && (
+                                            <span style={{ color: '#ef4444', fontSize: '0.75rem', flexShrink: 0 }}>Failed</span>
                                         )}
                                         {f.status === 'done' && (
                                             <button onClick={() => downloadBulkFile(f)} style={{ flexShrink: 0, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent-color)', padding: 0 }}>

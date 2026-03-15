@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
         }
     } else {
         // At minimum, log the submission so it's not silently lost
-        console.log(`[VPA Register] New access request: ${name} <${email}> from ${company}`);
+        console.warn(`[VPA Register] N8N_REGISTER_WEBHOOK_URL not set — access request not forwarded: ${name} <${email}> from ${company}`);
     }
 
     return NextResponse.json({ success: true });
