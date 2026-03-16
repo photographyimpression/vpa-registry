@@ -43,6 +43,9 @@ export default function Navbar() {
                     <Link href="/enterprise" className={pathname === '/enterprise' ? styles.active : ''}>Enterprise</Link>
                     <Link href="/pricing" className={pathname === '/pricing' ? styles.active : ''}>Pricing</Link>
                     <Link href="/verification" className={pathname === '/verification' ? styles.active : ''}>Verification</Link>
+                    <Link href="/montreal" className={`${styles.montrealLink} ${pathname === '/montreal' ? styles.active : ''}`}>
+                        Montreal<span className={styles.montrealDot} />
+                    </Link>
                 </div>
 
                 <div className={styles.navActions}>
@@ -76,6 +79,7 @@ export default function Navbar() {
                     <Link href="/enterprise">Enterprise</Link>
                     <Link href="/pricing">Pricing</Link>
                     <Link href="/verification">Verification</Link>
+                    <Link href="/montreal">Montreal</Link>
                     <div className={styles.mobileDivider}></div>
                     <Link href="/login" className={styles.mobileAction}>Partner Login</Link>
                     <Link href="/dashboard/issuance" className={styles.mobileActionPrimary}>Issue Certificate</Link>

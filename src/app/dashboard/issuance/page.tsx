@@ -87,8 +87,8 @@ export default function IssuancePage() {
     const handleDownload = () => {
         if (!result) return;
         const link = document.createElement('a');
-        link.href = `data:image/png;base64,${result.certifiedImageBase64}`;
-        link.download = `${result.vpaId}-certified.png`;
+        link.href = `data:image/jpeg;base64,${result.certifiedImageBase64}`;
+        link.download = `${result.vpaId}-certified.jpg`;
         link.click();
     };
 
@@ -103,7 +103,7 @@ export default function IssuancePage() {
     // ── BULK UPLOAD ──────────────────────────────────────────────────────────
     const MAX_BULK_FILES = 100;
     const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/tiff'];
-    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+    const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB
 
     const handleBulkFiles = useCallback((files: FileList) => {
         const valid: UploadedFile[] = [];
@@ -115,7 +115,7 @@ export default function IssuancePage() {
                 return;
             }
             if (file.size > MAX_FILE_SIZE) {
-                skipped.push(`${file.name} (exceeds 50 MB)`);
+                skipped.push(`${file.name} (exceeds 20 MB)`);
                 return;
             }
             valid.push({ file, id: Math.random().toString(36).substring(2), status: 'pending' });
@@ -149,50 +149,65 @@ export default function IssuancePage() {
         setBulkFiles((prev) => prev.filter((f) => f.id !== id));
     };
 
+    const CONCURRENCY = 5; // process 5 images in parallel
+
     const sealAll = async () => {
         if (bulkFiles.length === 0) return;
         setBulkStep('processing');
 
-        for (let i = 0; i < bulkFiles.length; i++) {
-            const f = bulkFiles[i];
+        // Process in batches of CONCURRENCY
+        for (let batchStart = 0; batchStart < bulkFiles.length; batchStart += CONCURRENCY) {
+            const batchEnd = Math.min(batchStart + CONCURRENCY, bulkFiles.length);
+            const batchIndices = Array.from({ length: batchEnd - batchStart }, (_, k) => batchStart + k);
+
+            // Mark batch as sealing
             setBulkFiles((prev) =>
-                prev.map((item, idx) => (idx === i ? { ...item, status: 'sealing' } : item))
+                prev.map((item, idx) =>
+                    batchIndices.includes(idx) ? { ...item, status: 'sealing' } : item
+                )
             );
 
-            try {
-                const formData = new FormData();
-                formData.append('image', f.file);
-                const pName = bulkProductName.trim() !== '' ? bulkProductName : f.file.name.replace(/\.[^.]+$/, '');
-                formData.append('productName', pName);
-                formData.append('batchId', bulkBatchId || 'BULK');
+            // Process batch concurrently
+            const results = await Promise.allSettled(
+                batchIndices.map(async (i) => {
+                    const f = bulkFiles[i];
+                    const formData = new FormData();
+                    formData.append('image', f.file);
+                    const pName = bulkProductName.trim() !== '' ? bulkProductName : f.file.name.replace(/\.[^.]+$/, '');
+                    formData.append('productName', pName);
+                    formData.append('batchId', bulkBatchId || 'BULK');
+                    formData.append('idempotencyKey', `${f.id}-${f.file.name}-${f.file.size}`);
 
-                const res = await fetch('/api/certify', { method: 'POST', body: formData });
-                const data = await res.json();
+                    const res = await fetch('/api/certify', { method: 'POST', body: formData });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || 'Failed');
+                    return { index: i, data };
+                })
+            );
 
-                if (!res.ok) throw new Error(data.error || 'Failed');
-
-                setBulkFiles((prev) =>
-                    prev.map((item, idx) =>
-                        idx === i
-                            ? {
-                                ...item,
-                                status: 'done',
-                                certId: data.vpaId,
-                                certifiedImageBase64: data.certifiedImageBase64,
-                                registryUrl: data.registryUrl,
-                            }
-                            : item
-                    )
-                );
-            } catch (err: unknown) {
-                setBulkFiles((prev) =>
-                    prev.map((item, idx) =>
-                        idx === i
-                            ? { ...item, status: 'error', errorMsg: err instanceof Error ? err.message : 'Error' }
-                            : item
-                    )
-                );
-            }
+            // Update state for each result
+            setBulkFiles((prev) =>
+                prev.map((item, idx) => {
+                    const resultIdx = batchIndices.indexOf(idx);
+                    if (resultIdx === -1) return item;
+                    const result = results[resultIdx];
+                    if (result.status === 'fulfilled') {
+                        return {
+                            ...item,
+                            status: 'done' as const,
+                            certId: result.value.data.vpaId,
+                            certifiedImageBase64: result.value.data.certifiedImageBase64,
+                            registryUrl: result.value.data.registryUrl,
+                        };
+                    } else {
+                        return {
+                            ...item,
+                            status: 'error' as const,
+                            errorMsg: result.reason instanceof Error ? result.reason.message : 'Error',
+                        };
+                    }
+                })
+            );
         }
         setBulkStep('done');
     };
@@ -205,8 +220,8 @@ export default function IssuancePage() {
     const downloadBulkFile = (f: UploadedFile) => {
         if (!f.certifiedImageBase64) return;
         const link = document.createElement('a');
-        link.href = `data:image/png;base64,${f.certifiedImageBase64}`;
-        link.download = `${f.certId}-certified.png`;
+        link.href = `data:image/jpeg;base64,${f.certifiedImageBase64}`;
+        link.download = `${f.certId}-certified.jpg`;
         link.click();
     };
 
@@ -268,7 +283,7 @@ export default function IssuancePage() {
                             <div className={styles.uploadArea}>
                                 <Upload size={48} opacity={0.2} />
                                 <p>Drag and drop your product photo</p>
-                                <span>Supports .JPG, .PNG, .WEBP, .TIFF (Max 50MB)</span>
+                                <span>Supports .JPG, .PNG, .WEBP, .TIFF (Max 20MB)</span>
                                 <button className={styles.browseBtn} onClick={() => singleFileRef.current?.click()}>Browse Files</button>
                             </div>
                         </div>
@@ -346,7 +361,7 @@ export default function IssuancePage() {
                             >
                                 <Layers size={48} opacity={0.2} />
                                 <p>Drag &amp; drop multiple product images</p>
-                                <span>Supports .JPG, .PNG, .WEBP, .TIFF — up to {MAX_BULK_FILES} images, 50 MB each</span>
+                                <span>Supports .JPG, .PNG, .WEBP, .TIFF — up to {MAX_BULK_FILES} images, 20 MB each</span>
                                 <button className={styles.browseBtn} onClick={() => bulkFileRef.current?.click()}>Browse Files</button>
                             </div>
 

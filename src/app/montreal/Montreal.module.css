@@ -1,0 +1,452 @@
+.page {
+    min-height: 100vh;
+    background-color: var(--background);
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Grain overlay */
+.page::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.03;
+    z-index: 100;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ─── HERO ─── */
+.hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 10rem 2rem 6rem;
+    position: relative;
+    z-index: 10;
+    animation: slideUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: var(--background);
+    border: 1px solid var(--border-color);
+    padding: 0.25rem 1rem 0.25rem 0.25rem;
+    border-radius: 100px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--foreground);
+    margin-bottom: 2.5rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.badgeHighlight {
+    background: var(--accent-color);
+    color: white;
+    padding: 0.15rem 0.75rem;
+    border-radius: 100px;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.heroTitle {
+    font-family: var(--font-serif);
+    font-size: clamp(3rem, 7vw, 5.5rem);
+    font-weight: 500;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    margin-bottom: 1.5rem;
+    color: var(--foreground);
+}
+
+.gradientText {
+    background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.heroSub {
+    font-size: 1.2rem;
+    line-height: 1.6;
+    color: var(--foreground);
+    opacity: 0.65;
+    max-width: 580px;
+    margin: 0 auto 3rem;
+}
+
+/* ─── PROMO BOX ─── */
+.promoBox {
+    background: color-mix(in srgb, var(--foreground) 3%, transparent);
+    border: 2px solid var(--accent-color);
+    border-radius: var(--radius-lg);
+    padding: 2rem 2.5rem;
+    max-width: 480px;
+    width: 100%;
+    margin: 0 auto 2.5rem;
+}
+
+.spotsLabel {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent-color);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.codeLabel {
+    font-size: 0.95rem;
+    color: var(--foreground);
+    opacity: 0.6;
+    margin-bottom: 0.75rem;
+}
+
+.promoCode {
+    display: inline-block;
+    background: var(--accent-light);
+    border: 2px dashed var(--accent-color);
+    padding: 0.7rem 2rem;
+    border-radius: var(--radius-md);
+    font-family: var(--font-mono);
+    font-size: 1.75rem;
+    font-weight: 800;
+    letter-spacing: 0.15em;
+    color: var(--accent-color);
+}
+
+.promoNote {
+    font-size: 0.8rem;
+    color: var(--foreground);
+    opacity: 0.4;
+    margin-top: 0.75rem;
+}
+
+/* CTA Button */
+.ctaBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--accent-color);
+    color: #050a14;
+    padding: 1rem 2.5rem;
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.25s ease;
+    border: none;
+    cursor: pointer;
+    margin-bottom: 2rem;
+}
+
+.ctaBtn:hover {
+    background: var(--accent-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(197, 160, 52, 0.25);
+}
+
+/* Progress bar */
+.progressWrap {
+    max-width: 360px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.progressLabel {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    color: var(--foreground);
+    opacity: 0.4;
+    margin-bottom: 0.5rem;
+}
+
+.progressBar {
+    background: color-mix(in srgb, var(--foreground) 8%, transparent);
+    border-radius: 10px;
+    height: 8px;
+    overflow: hidden;
+}
+
+.progressFill {
+    background: linear-gradient(90deg, var(--accent-color), var(--accent-hover));
+    height: 100%;
+    border-radius: 10px;
+    width: 72%;
+    transition: width 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ─── HOW IT WORKS ─── */
+.howSection {
+    padding: 6rem 2rem;
+    background: color-mix(in srgb, var(--foreground) 2%, transparent);
+    border-top: 1px solid var(--border-color);
+    position: relative;
+    z-index: 10;
+}
+
+.sectionTitle {
+    font-family: var(--font-serif);
+    font-size: clamp(2rem, 4vw, 3rem);
+    text-align: center;
+    margin-bottom: 0.75rem;
+    color: var(--foreground);
+}
+
+.sectionSub {
+    text-align: center;
+    font-size: 1.05rem;
+    color: var(--foreground);
+    opacity: 0.55;
+    max-width: 550px;
+    margin: 0 auto 4rem;
+}
+
+.steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.step {
+    text-align: center;
+    padding: 2.5rem 2rem;
+    background: var(--background);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.step:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-lg);
+}
+
+.stepNum {
+    width: 48px;
+    height: 48px;
+    background: var(--accent-light);
+    color: var(--accent-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin: 0 auto 1.5rem;
+}
+
+.step h3 {
+    font-family: var(--font-sans);
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    color: var(--foreground);
+}
+
+.step p {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--foreground);
+    opacity: 0.6;
+}
+
+/* ─── STATS ─── */
+.statsSection {
+    padding: 4rem 2rem;
+    background: var(--seal-gradient);
+    position: relative;
+    z-index: 10;
+}
+
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    max-width: 900px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.statNum {
+    font-family: var(--font-serif);
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    font-weight: 600;
+    color: var(--accent-color);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+.statLabel {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
+    line-height: 1.5;
+    max-width: 220px;
+    margin: 0 auto;
+}
+
+/* ─── BENEFITS ─── */
+.benefitsSection {
+    padding: 6rem 2rem;
+    position: relative;
+    z-index: 10;
+}
+
+.benefitsGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.benefit {
+    padding: 2.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    background: var(--background);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.benefit:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--accent-light);
+}
+
+.benefitIcon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    background: var(--accent-light);
+    color: var(--accent-color);
+    margin-bottom: 1.25rem;
+}
+
+.benefit h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--foreground);
+}
+
+.benefit p {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--foreground);
+    opacity: 0.6;
+}
+
+/* ─── FINAL CTA ─── */
+.finalCta {
+    padding: 6rem 2rem;
+    background: var(--seal-gradient);
+    text-align: center;
+    position: relative;
+    z-index: 10;
+}
+
+.finalCta h2 {
+    font-family: var(--font-serif);
+    font-size: clamp(2rem, 4vw, 2.75rem);
+    color: #fff;
+    margin-bottom: 1rem;
+}
+
+.finalCta p {
+    font-size: 1.05rem;
+    color: rgba(255, 255, 255, 0.6);
+    max-width: 480px;
+    margin: 0 auto 2rem;
+    line-height: 1.6;
+}
+
+.ctaBtnLight {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--accent-color);
+    color: #050a14;
+    padding: 1rem 2.5rem;
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.25s ease;
+}
+
+.ctaBtnLight:hover {
+    background: var(--accent-hover);
+    transform: translateY(-2px);
+}
+
+/* ─── REVEAL ANIMATION ─── */
+.reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.revealVisible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 768px) {
+    .hero {
+        padding: 7rem 1.5rem 4rem;
+    }
+
+    .steps {
+        grid-template-columns: 1fr;
+    }
+
+    .statsGrid {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+    }
+
+    .benefitsGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .promoBox {
+        padding: 1.5rem;
+    }
+
+    .promoCode {
+        font-size: 1.3rem;
+        padding: 0.5rem 1.5rem;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

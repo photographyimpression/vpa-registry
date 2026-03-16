@@ -49,5 +49,8 @@ EXPOSE 3000
 
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
+# Allow Node to use up to 1.5 GB heap for Sharp image processing under load.
+# Pair with Cloud Run --memory=2Gi (or higher) for production.
+ENV NODE_OPTIONS="--max-old-space-size=1536"
 
 CMD ["node", "server.js"]

@@ -2,140 +2,269 @@
 
 import { useEffect, useRef } from 'react';
 import SearchPortal from '@/components/SearchPortal';
-import TrustStory from '@/components/TrustStory';
-import { ShieldCheck, Lock, Globe, Zap } from 'lucide-react';
+import AnimatedExplainer from '@/components/AnimatedExplainer';
+import Link from 'next/link';
+import { ShieldCheck, ScanLine, Globe, ArrowRight, BadgeCheck, Camera, Eye, CheckCircle2, Zap, Lock } from 'lucide-react';
 import styles from './Home.module.css';
 
+const STATS = [
+    { value: '12,847', label: 'Certificates Issued' },
+    { value: '99.99%', label: 'Registry Uptime' },
+    { value: '47', label: 'Partner Brands' },
+    { value: '2.1M', label: 'Verifications' },
+];
+
+const STEPS = [
+    {
+        num: '01',
+        icon: <Camera size={22} />,
+        title: 'Upload & Verify',
+        desc: 'Partners upload product photos. Our system verifies each image is authentic using metadata forensics and AI detection.',
+    },
+    {
+        num: '02',
+        icon: <BadgeCheck size={22} />,
+        title: 'Certify & Seal',
+        desc: 'Each image receives a unique VPA ID, a certification badge, and a QR code — permanently linked to our public registry.',
+    },
+    {
+        num: '03',
+        icon: <Eye size={22} />,
+        title: 'Scan & Confirm',
+        desc: 'Anyone, anywhere can scan the QR code or enter the ID to confirm the product photo is genuine and unaltered.',
+    },
+];
+
+const FEATURES = [
+    {
+        icon: <ScanLine size={22} />,
+        title: 'Instant QR Verification',
+        desc: 'Every certified image carries a scannable QR code. Verify from any device in seconds.',
+        color: 'amber',
+    },
+    {
+        icon: <Globe size={22} />,
+        title: 'Public Registry',
+        desc: 'Every certificate is published to our open registry. Buyers and regulators can verify independently.',
+        color: 'emerald',
+    },
+    {
+        icon: <Lock size={22} />,
+        title: 'Partner-Only Issuance',
+        desc: 'Only approved brand partners can issue certificates, ensuring every seal traces to a verified source.',
+        color: 'blue',
+    },
+    {
+        icon: <Zap size={22} />,
+        title: 'AI Detection',
+        desc: 'Our pipeline detects AI-generated and digitally altered images before they enter the registry.',
+        color: 'purple',
+    },
+];
+
+const PARTNERS = [
+    'Luxora', 'SecureFab', 'AuthNet', 'GlobalVera', 'ChainTrace', 'TrustSeal', 'OriginCheck', 'PurePath',
+];
+
 export default function Home() {
-  const bentoRef = useRef<HTMLDivElement>(null);
+    const revealRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const scroll = window.scrollY;
-      document.documentElement.style.setProperty('--scroll-y', `${scroll}px`);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    useEffect(() => {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add(styles.visible);
+                }
+            });
+        }, { threshold: 0.1 });
 
-  useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add(styles.revealVisible);
-        }
-      });
-    }, { threshold: 0.1 });
+        const els = document.querySelectorAll(`.${styles.reveal}`);
+        els.forEach(el => observer.observe(el));
+        return () => observer.disconnect();
+    }, []);
 
-    const revealedElements = document.querySelectorAll(`.${styles.reveal}`);
-    revealedElements.forEach(el => observer.observe(el));
+    return (
+        <main className={styles.page} ref={revealRef}>
+            {/* ── HERO ─────────────────────────────────────────────── */}
+            <section className={styles.hero}>
+                {/* Gradient orbs */}
+                <div className={styles.orbGold} />
+                <div className={styles.orbGreen} />
+                <div className={styles.orbBlue} />
 
-    return () => observer.disconnect();
-  }, []);
+                <div className={styles.heroInner}>
+                    <div className={styles.badge}>
+                        <ShieldCheck size={14} />
+                        <span>The Global Standard for Product Authenticity</span>
+                    </div>
 
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!bentoRef.current) return;
-      const cards = bentoRef.current.querySelectorAll(`.${styles.bentoCard}`);
-      cards.forEach((card) => {
-        const rect = (card as HTMLElement).getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        (card as HTMLElement).style.setProperty('--mouse-x', `${x}px`);
-        (card as HTMLElement).style.setProperty('--mouse-y', `${y}px`);
+                    <h1 className={styles.headline}>
+                        Trust.<br />
+                        <span className={styles.headlineAccent}>Certified.</span>
+                    </h1>
 
-        // 3D Tilt
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-        const rotateX = (y - centerY) / 20;
-        const rotateY = (centerX - x) / 20;
+                    <p className={styles.subhead}>
+                        Like a GIA certificate for diamonds — but for every product photo online.
+                        We verify, seal, and register images so buyers know what they see is real.
+                    </p>
 
-        (card as HTMLElement).style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-8px)`;
-      });
-    };
+                    {/* Animated explainer */}
+                    <div className={styles.videoWrapper}>
+                        <AnimatedExplainer />
+                    </div>
 
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
+                    <div className={styles.heroSearch}>
+                        <SearchPortal />
+                    </div>
 
-  return (
-    <main className={styles.mainContainer}>
-      <section className={styles.heroSection}>
-        <div className={styles.heroContent}>
-          <div className={styles.badge}>
-            <span className={styles.badgeHighlight}>New</span>
-            <span>VPA Registry — Now accepting partners</span>
-          </div>
-          <h1 className={`${styles.heroTitle} ${styles.reveal}`}>
-            The global standard in <br />
-            <span className={styles.gradientText}>product authenticity.</span>
-          </h1>
-          <p className={`${styles.heroSubtitle} ${styles.reveal}`} style={{ transitionDelay: '0.2s' }}>
-            Verify cryptographic certificates instantly. Protect your high-end brand, build institutional trust, and defeat counterfeits with our immutable ledger.
-          </p>
+                    <div className={styles.heroCtas}>
+                        <Link href="/register" className={styles.ctaPrimary}>
+                            Become a Certified Partner <ArrowRight size={16} />
+                        </Link>
+                        <Link href="/verification" className={styles.ctaSecondary}>
+                            Verify a Certificate <ArrowRight size={16} />
+                        </Link>
+                    </div>
+                </div>
 
-          <div className={styles.searchContainer}>
-            <SearchPortal />
-          </div>
+                {/* Trusted by */}
+                <div className={styles.trustedBy}>
+                    <p className={styles.trustedLabel}>TRUSTED BY LEADING BRANDS</p>
+                    <div className={styles.partnerRow}>
+                        {PARTNERS.map((p, i) => (
+                            <span key={i} className={styles.partnerName}>{p}</span>
+                        ))}
+                    </div>
+                </div>
+            </section>
 
-          <div className={styles.scrollIndicator}>
-            <span>SCROLL TO EXPLORE</span>
-            <div className={styles.mouse}>
-              <div className={styles.wheel}></div>
-            </div>
-          </div>
-        </div>
+            {/* ── STATS ────────────────────────────────────────────── */}
+            <section className={`${styles.statsSection} ${styles.reveal}`}>
+                <div className={styles.statsGrid}>
+                    {STATS.map((s, i) => (
+                        <div key={i} className={styles.statCard}>
+                            <span className={styles.statValue}>{s.value}</span>
+                            <span className={styles.statLabel}>{s.label}</span>
+                        </div>
+                    ))}
+                </div>
+            </section>
 
-        <div className={styles.heroVisual}>
-          <div className={`${styles.glassMockup} ${styles.reveal}`} style={{ transitionDelay: '0.4s' }}>
-            <div className={styles.glareEffect}></div>
-            <div className={styles.mockupHeader}>
-              <div className={styles.dots}>
-                <span></span><span></span><span></span>
-              </div>
-              <div className={styles.urlBar}>vparegistry.com/verify</div>
-            </div>
-            <div className={styles.mockupBody}>
-              <div className={styles.mockSkeletonImage}></div>
-              <div className={styles.mockSkeletonText}></div>
-              <div className={styles.mockSkeletonTextShort}></div>
-              <div className={styles.mockStamp}>VERIFIED</div>
-            </div>
-          </div>
-        </div>
-      </section>
+            {/* ── HOW IT WORKS ─────────────────────────────────────── */}
+            <section className={styles.howSection}>
+                <div className={styles.sectionInner}>
+                    <div className={`${styles.sectionHeader} ${styles.reveal}`}>
+                        <span className={styles.sectionBadge}>How it works</span>
+                        <h2 className={styles.sectionTitle}>
+                            Three steps to certified trust
+                        </h2>
+                        <p className={styles.sectionDesc}>
+                            Our streamlined pipeline takes product images from upload to certified in seconds.
+                        </p>
+                    </div>
 
-      <TrustStory />
+                    <div className={styles.stepsGrid}>
+                        {STEPS.map((step, i) => (
+                            <div key={i} className={`${styles.stepCard} ${styles.reveal}`} style={{ transitionDelay: `${i * 0.1}s` }}>
+                                <div className={styles.stepNum}>{step.num}</div>
+                                <div className={styles.stepIcon}>{step.icon}</div>
+                                <h3 className={styles.stepTitle}>{step.title}</h3>
+                                <p className={styles.stepDesc}>{step.desc}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
 
-      <section className={styles.featuresSection}>
-        <div className={styles.featureBento} ref={bentoRef}>
-          <div className={`${styles.bentoCard} ${styles.bentoLarge} ${styles.reveal}`}>
-            <Lock size={32} className={styles.featureIcon} />
-            <h3>Cryptographic Proof</h3>
-            <p>Every certificate is cryptographically sealed and logged into an immutable master ledger.</p>
-          </div>
-          <div className={`${styles.bentoCard} ${styles.reveal}`} style={{ transitionDelay: '0.1s' }}>
-            <Zap size={32} className={styles.featureIcon} />
-            <h3>Instant Verification</h3>
-            <p>Scan any VPA QR code to instantly confirm a product&apos;s authenticity against our central registry.</p>
-          </div>
-          <div className={`${styles.featureCard} ${styles.reveal}`} style={{ transitionDelay: '0.2s' }}>
-            <div className={styles.featureIcon}>
-              <Globe size={24} />
-            </div>
-            <h3>Global Registry</h3>
-            <p>Certificates are publicly verifiable by anyone, anywhere — giving buyers confidence regardless of where they shop.</p>
-          </div>
+            {/* ── FEATURES ─────────────────────────────────────────── */}
+            <section className={styles.featuresSection}>
+                <div className={styles.sectionInner}>
+                    <div className={`${styles.sectionHeader} ${styles.reveal}`}>
+                        <span className={styles.sectionBadge}>Features</span>
+                        <h2 className={styles.sectionTitle}>
+                            Built for scale and security
+                        </h2>
+                    </div>
 
-          <div className={`${styles.featureCard} ${styles.trustCard} ${styles.reveal}`} style={{ transitionDelay: '0.3s' }}>
-            <div className={styles.featureIcon} style={{ background: 'var(--accent-light)' }}>
-              <ShieldCheck size={24} />
-            </div>
-            <h3>Partner-Only Issuance</h3>
-            <p>Only verified brand partners can issue certificates, ensuring every VPA ID traces back to a legitimate source.</p>
-          </div>
-        </div>
-      </section>
-    </main>
-  );
+                    <div className={styles.featuresGrid}>
+                        {FEATURES.map((feat, i) => (
+                            <div key={i} className={`${styles.featureCard} ${styles[`feature_${feat.color}`]} ${styles.reveal}`} style={{ transitionDelay: `${i * 0.08}s` }}>
+                                <div className={styles.featureIcon}>{feat.icon}</div>
+                                <h3 className={styles.featureTitle}>{feat.title}</h3>
+                                <p className={styles.featureDesc}>{feat.desc}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* ── VERIFICATION DEMO ────────────────────────────────── */}
+            <section className={styles.demoSection}>
+                <div className={styles.sectionInner}>
+                    <div className={`${styles.demoCard} ${styles.reveal}`}>
+                        <div className={styles.demoContent}>
+                            <span className={styles.sectionBadge}>Live verification</span>
+                            <h2 className={styles.demoTitle}>See it in action</h2>
+                            <p className={styles.demoDesc}>
+                                Every certified product image carries a unique VPA ID. Scan the QR code or enter the ID to instantly verify authenticity.
+                            </p>
+                            <div className={styles.demoChecks}>
+                                <div className={styles.demoCheck}><CheckCircle2 size={18} /> <span>Image integrity confirmed</span></div>
+                                <div className={styles.demoCheck}><CheckCircle2 size={18} /> <span>No AI generation detected</span></div>
+                                <div className={styles.demoCheck}><CheckCircle2 size={18} /> <span>Registered to verified partner</span></div>
+                            </div>
+                        </div>
+                        <div className={styles.demoVisual}>
+                            <div className={styles.mockCert}>
+                                <div className={styles.mockHeader}>
+                                    <ShieldCheck size={20} />
+                                    <span>VPA CERTIFICATE</span>
+                                </div>
+                                <div className={styles.mockBody}>
+                                    <div className={styles.mockRow}>
+                                        <span className={styles.mockLabel}>Registry ID</span>
+                                        <span className={styles.mockValue}>VPA-XK4MNR-2847</span>
+                                    </div>
+                                    <div className={styles.mockRow}>
+                                        <span className={styles.mockLabel}>Status</span>
+                                        <span className={styles.mockStatus}>VERIFIED AUTHENTIC</span>
+                                    </div>
+                                    <div className={styles.mockRow}>
+                                        <span className={styles.mockLabel}>Issued</span>
+                                        <span className={styles.mockValue}>2026-03-12</span>
+                                    </div>
+                                    <div className={styles.mockRow}>
+                                        <span className={styles.mockLabel}>Partner</span>
+                                        <span className={styles.mockValue}>Luxora International</span>
+                                    </div>
+                                </div>
+                                <div className={styles.mockQr}>
+                                    <ScanLine size={32} strokeWidth={1} />
+                                    <span>Scan to verify</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* ── CTA BANNER ───────────────────────────────────────── */}
+            <section className={`${styles.ctaBanner} ${styles.reveal}`}>
+                <div className={styles.ctaBannerOrb} />
+                <div className={styles.sectionInner}>
+                    <h2 className={styles.ctaBannerTitle}>Ready to certify your product images?</h2>
+                    <p className={styles.ctaBannerDesc}>Join the brands building consumer trust through verified product imagery.</p>
+                    <div className={styles.ctaBannerActions}>
+                        <Link href="/register" className={styles.ctaPrimary}>
+                            Apply for Partner Access <ArrowRight size={16} />
+                        </Link>
+                        <Link href="/verification" className={styles.ctaSecondary}>
+                            Verify a Certificate <ArrowRight size={16} />
+                        </Link>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    );
 }

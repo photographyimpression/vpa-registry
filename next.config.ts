@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
 
   // Stripe webhook needs raw body — disable body size limit for that route
   experimental: {
-    serverActions: { bodySizeLimit: '52mb' },
+    serverActions: { bodySizeLimit: '22mb' },
   },
 
   async headers() {

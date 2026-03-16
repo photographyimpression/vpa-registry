@@ -2,47 +2,69 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ShieldCheck, Package, Building2, Check, ArrowRight, Zap, Loader2 } from 'lucide-react';
+import { ShieldCheck, Package, Building2, Check, ArrowRight, Zap, Loader2, Gift } from 'lucide-react';
 import styles from './Pricing.module.css';
 
 const plans = [
     {
-        name: 'Starter',
-        key: 'starter' as const,
-        icon: Package,
-        monthlyPrice: 49,
-        annualPrice: 39,
-        desc: 'For small producers and individual artisans who need core authenticity protection.',
-        cta: 'Get Started',
+        name: 'Free',
+        key: null,
+        icon: Gift,
+        monthlyPrice: 0,
+        annualPrice: 0,
+        desc: 'Try VPA on your top items. No credit card required.',
+        cta: 'Get Started Free',
         ctaStyle: 'outline',
+        href: '/register',
         featured: false,
         features: [
-            'Up to 100 certificates / month',
+            'Up to 50 certificates / month',
             'Single image upload',
             'QR code verification seal',
             'Public registry listing',
-            'Basic analytics dashboard',
+            'VPA watermark on verification',
             'Email support',
+        ],
+    },
+    {
+        name: 'Starter',
+        key: 'starter' as const,
+        icon: Package,
+        monthlyPrice: 499,
+        annualPrice: 399,
+        desc: 'For resellers authenticating their full inventory with custom branding.',
+        cta: 'Start Free Trial',
+        ctaStyle: 'gold',
+        featured: true,
+        features: [
+            'Up to 500 certificates / month',
+            'Bulk upload (up to 500 images)',
+            'Custom branding on certificates',
+            'No VPA watermark',
+            'Advanced analytics dashboard',
+            'API access (5,000 req/day)',
+            'Priority email & chat support',
         ],
     },
     {
         name: 'Professional',
         key: 'professional' as const,
         icon: Zap,
-        monthlyPrice: 149,
-        annualPrice: 119,
-        desc: 'For growing brands that need bulk operations and business-grade tooling.',
+        monthlyPrice: 1999,
+        annualPrice: 1599,
+        desc: 'For high-volume sellers and marketplaces needing full integration.',
         cta: 'Start Free Trial',
-        ctaStyle: 'gold',
-        featured: true,
+        ctaStyle: 'outline',
+        featured: false,
         features: [
-            'Up to 2,000 certificates / month',
-            'Bulk upload (up to 200 images)',
-            'Cryptographic proof of issuance',
-            'Priority registry listing',
-            'Advanced analytics',
-            'API access (1,000 req/day)',
-            'Priority email & chat support',
+            'Up to 5,000 certificates / month',
+            'Bulk upload (unlimited)',
+            'White-label verification pages',
+            'Shopify / WooCommerce integration',
+            'Advanced analytics & reports',
+            'Unlimited API access',
+            'Dedicated account manager',
+            '99.9% uptime SLA',
         ],
     },
     {
@@ -150,9 +172,11 @@ export default function PricingPage() {
                                 <div className={styles.planIcon}><Icon size={22} /></div>
                                 <div className={styles.planName}>{plan.name}</div>
                                 <div className={styles.planPrice}>
-                                    {price !== null ? (
+                                    {price === 0 ? (
+                                        <span className={styles.planPriceAmount}>$0</span>
+                                    ) : price !== null ? (
                                         <>
-                                            <span className={styles.planPriceAmount}>${price}</span>
+                                            <span className={styles.planPriceAmount}>${price.toLocaleString()}</span>
                                             <span className={styles.planPriceUnit}>/mo</span>
                                             {annual && (
                                                 <span style={{ fontSize: '0.75rem', opacity: 0.5, display: 'block', marginTop: '2px' }}>

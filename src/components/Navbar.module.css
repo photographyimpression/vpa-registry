@@ -387,3 +387,23 @@
         transform: translateX(0);
     }
 }
+
+.montrealLink {
+    position: relative;
+}
+
+.montrealDot {
+    position: absolute;
+    top: -2px;
+    right: -10px;
+    width: 6px;
+    height: 6px;
+    background: var(--accent-color);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.3); }
+}

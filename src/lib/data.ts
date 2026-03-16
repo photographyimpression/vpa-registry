@@ -1,4 +1,5 @@
 import Papa from 'papaparse';
+import { redis } from '@/lib/redis';
 
 export interface CertificateRecord {
     VPA_Tracking_ID: string;
@@ -9,6 +10,14 @@ export interface CertificateRecord {
     Product_Name?: string;
     Certified_Image_URL?: string;
 }
+
+// ── Cache configuration ──────────────────────────────────────────────────────
+// Redis cache: 5 min TTL with stale-while-revalidate pattern.
+// In-memory fallback for local dev (single instance only).
+const CACHE_TTL_S = 300; // 5 minutes
+const CACHE_KEY = 'vpa:certificates:all';
+
+let memoryCache: { data: CertificateRecord[]; expiresAt: number } | null = null;
 
 async function fetchAllFromSheets(): Promise<CertificateRecord[]> {
     const url = process.env.GOOGLE_SHEETS_CSV_URL;
@@ -40,9 +49,54 @@ async function fetchAllFromSheets(): Promise<CertificateRecord[]> {
     }
 }
 
-/** Returns ALL certificate records from Google Sheets. */
+/**
+ * Returns ALL certificate records, using a cache layer to avoid
+ * re-downloading the full CSV on every request.
+ *
+ * Cache priority: Redis (shared, multi-instance) → in-memory (dev fallback).
+ */
 export async function getAllCertificates(): Promise<CertificateRecord[]> {
-    return fetchAllFromSheets();
+    // 1. Try Redis cache
+    if (redis) {
+        try {
+            const cached = await redis.get<CertificateRecord[]>(CACHE_KEY);
+            if (cached) return cached;
+        } catch (err) {
+            console.warn('[VPA Cache] Redis read failed, falling through to fetch:', err);
+        }
+    } else {
+        // 2. In-memory fallback (dev only)
+        if (memoryCache && Date.now() < memoryCache.expiresAt) {
+            return memoryCache.data;
+        }
+    }
+
+    // 3. Fetch fresh data
+    const records = await fetchAllFromSheets();
+
+    // 4. Populate cache
+    if (redis) {
+        try {
+            await redis.set(CACHE_KEY, records, { ex: CACHE_TTL_S });
+        } catch (err) {
+            console.warn('[VPA Cache] Redis write failed:', err);
+        }
+    } else {
+        memoryCache = { data: records, expiresAt: Date.now() + CACHE_TTL_S * 1000 };
+    }
+
+    return records;
+}
+
+/**
+ * Invalidate the certificate cache. Call after issuing a new certificate
+ * so the next read picks up the latest data.
+ */
+export async function invalidateCertificateCache(): Promise<void> {
+    if (redis) {
+        try { await redis.del(CACHE_KEY); } catch { /* best-effort */ }
+    }
+    memoryCache = null;
 }
 
 export async function getCertificateData(id: string): Promise<CertificateRecord | null> {
@@ -64,6 +118,6 @@ export async function getCertificateData(id: string): Promise<CertificateRecord 
         return null;
     }
 
-    const records = await fetchAllFromSheets();
+    const records = await getAllCertificates();
     return records.find(r => r.VPA_Tracking_ID === id) || null;
 }

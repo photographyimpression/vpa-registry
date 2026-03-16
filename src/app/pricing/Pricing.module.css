@@ -94,9 +94,9 @@
 /* Plans grid */
 .plansGrid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
-    max-width: 1100px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+    max-width: 1300px;
     margin: 0 auto 5rem;
     padding: 0 2rem;
     align-items: start;
@@ -305,6 +305,12 @@
 .trustBandCta:hover {
     background: var(--accent-hover);
     transform: translateY(-2px);
+}
+
+@media (max-width: 1024px) {
+    .plansGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 @media (max-width: 768px) {
