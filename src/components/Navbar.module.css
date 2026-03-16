@@ -117,10 +117,10 @@
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
+    width: 100vw;
     height: 100vh;
-    background: var(--background);
-    z-index: 900;
+    background: #fdfdfc;
+    z-index: 1050;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -323,21 +323,9 @@
     }
 }
 
-.mobileOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(253, 253, 252, 0.98);
-    backdrop-filter: blur(16px);
-    z-index: 1050;
-    animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
 @media (prefers-color-scheme: dark) {
     .mobileOverlay {
-        background: rgba(7, 9, 13, 0.98);
+        background: #07090d;
     }
 }
 
