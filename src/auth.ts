@@ -1,5 +1,7 @@
 import NextAuth, { type DefaultSession } from "next-auth"
 import Google from "next-auth/providers/google"
+import Credentials from "next-auth/providers/credentials"
+import { getUserByEmail, verifyPassword } from "@/lib/users"
 import { getSubscriptionPlan, type PlanTier } from "@/lib/stripe"
 
 declare module "next-auth" {
@@ -11,18 +13,31 @@ declare module "next-auth" {
     }
 }
 
-// next-auth/jwt augmentation — handled via next-auth module above
-
 export const { handlers, signIn, signOut, auth } = NextAuth({
-    providers: [Google],
+    providers: [
+        Google,
+        Credentials({
+            credentials: {
+                email: { label: "Email", type: "email" },
+                password: { label: "Password", type: "password" },
+            },
+            async authorize(credentials) {
+                if (!credentials?.email || !credentials?.password) return null;
+                const user = await getUserByEmail(credentials.email as string);
+                if (!user) return null;
+                const valid = verifyPassword(credentials.password as string, user.hashedPassword);
+                if (!valid) return null;
+                return { id: user.email, email: user.email, name: user.name };
+            },
+        }),
+    ],
     secret: process.env.AUTH_SECRET,
     session: {
         strategy: "jwt",
-        maxAge: 30 * 24 * 60 * 60, // 30 days
+        maxAge: 30 * 24 * 60 * 60,
     },
     callbacks: {
         async jwt({ token, trigger }) {
-            // Refresh Stripe plan on sign-in or explicit session update
             if (trigger === 'signIn' || trigger === 'update') {
                 token.plan = await getSubscriptionPlan(token.email)
             }
@@ -40,7 +55,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             const isOnDashboard = nextUrl.pathname.startsWith('/dashboard')
             if (isOnDashboard) {
                 if (isLoggedIn) return true
-                return false // Redirect to login
+                return false
             } else if (isLoggedIn && (nextUrl.pathname === '/login' || nextUrl.pathname === '/register')) {
                 return Response.redirect(new URL('/dashboard', nextUrl))
             }
