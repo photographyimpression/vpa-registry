@@ -1,0 +1,7 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/vpa-registry-prod/vpa-screenshot', '.']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/vpa-registry-prod/vpa-screenshot']
+images:
+  - 'gcr.io/vpa-registry-prod/vpa-screenshot'
