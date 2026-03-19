@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { SessionProvider, useSession, signOut } from 'next-auth/react';
-import { LayoutDashboard, Database, Activity, Key, Settings, LogOut, ShieldCheck, User } from 'lucide-react';
+import { LayoutDashboard, Database, Activity, Key, Settings, LogOut, ShieldCheck, User, Megaphone, Plug } from 'lucide-react';
 import styles from './Dashboard.module.css';
 
 // Force dynamic rendering — dashboard is always auth-gated, never static
@@ -40,6 +40,12 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
                     </Link>
                     <Link href="/dashboard/issuance" className={pathname === '/dashboard/issuance' ? styles.navItemActive : styles.navItem}>
                         <Activity size={20} /> Issuance
+                    </Link>
+                    <Link href="/dashboard/campaigns" className={pathname.startsWith('/dashboard/campaigns') ? styles.navItemActive : styles.navItem}>
+                        <Megaphone size={20} /> Campaigns
+                    </Link>
+                    <Link href="/dashboard/integrations" className={pathname === '/dashboard/integrations' ? styles.navItemActive : styles.navItem}>
+                        <Plug size={20} /> Integrations
                     </Link>
                     <Link href="/dashboard/api" className={pathname === '/dashboard/api' ? styles.navItemActive : styles.navItem}>
                         <Key size={20} /> API Access

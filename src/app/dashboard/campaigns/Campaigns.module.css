@@ -1,0 +1,836 @@
+/* Campaign List Page */
+.pageHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 3rem;
+}
+
+.headerLeft h1 {
+    font-family: var(--font-serif);
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+}
+
+.headerLeft p {
+    font-family: var(--font-sans);
+    font-size: 1.1rem;
+    opacity: 0.5;
+}
+
+.newCampaignBtn {
+    background: var(--accent-color);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.newCampaignBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Stats Grid */
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.statCard {
+    background: white;
+    padding: 2rem;
+    border-radius: 24px;
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.statCard:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--accent-light);
+}
+
+@media (prefers-color-scheme: dark) {
+    .statCard {
+        background: #151b23;
+    }
+}
+
+.statLabel {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.5;
+}
+
+.statValue {
+    font-size: 1.75rem;
+    font-weight: 800;
+    font-family: var(--font-mono);
+}
+
+/* Campaign Cards Grid */
+.campaignGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 1.5rem;
+}
+
+.campaignCard {
+    background: white;
+    padding: 2rem;
+    border-radius: 24px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.campaignCard:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--accent-light);
+}
+
+@media (prefers-color-scheme: dark) {
+    .campaignCard {
+        background: #151b23;
+    }
+}
+
+.campaignCardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.campaignCardHeader h3 {
+    font-size: 1.15rem;
+    font-weight: 800;
+    margin-bottom: 0.25rem;
+}
+
+.campaignMeta {
+    font-size: 0.85rem;
+    opacity: 0.5;
+}
+
+/* Status Badges */
+.statusBadge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 100px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    flex-shrink: 0;
+}
+
+.statusDraft {
+    background: rgba(107, 114, 128, 0.12);
+    color: #6b7280;
+}
+
+.statusActive {
+    background: rgba(16, 185, 129, 0.12);
+    color: #10b981;
+}
+
+.statusPaused {
+    background: rgba(245, 158, 11, 0.12);
+    color: #f59e0b;
+}
+
+.statusCompleted {
+    background: rgba(59, 130, 246, 0.12);
+    color: #3b82f6;
+}
+
+/* Funnel Mini Bar */
+.funnelBar {
+    display: flex;
+    height: 8px;
+    border-radius: 100px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.04);
+    width: 100%;
+}
+
+@media (prefers-color-scheme: dark) {
+    .funnelBar {
+        background: rgba(255, 255, 255, 0.06);
+    }
+}
+
+.funnelSegment {
+    height: 100%;
+    transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    min-width: 2px;
+}
+
+.funnelScraped {
+    background: #6b7280;
+}
+
+.funnelEmailed {
+    background: #3b82f6;
+}
+
+.funnelOpened {
+    background: #8b5cf6;
+}
+
+.funnelClicked {
+    background: #f59e0b;
+}
+
+.funnelSignedUp {
+    background: #10b981;
+}
+
+.funnelIntegrated {
+    background: var(--accent-color);
+}
+
+.funnelLabels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.72rem;
+    opacity: 0.5;
+    margin-top: 0.35rem;
+}
+
+.campaignCardFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.82rem;
+    opacity: 0.5;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Detail Page */
+.detailHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.detailHeaderLeft {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.detailHeaderLeft h1 {
+    font-family: var(--font-serif);
+    font-size: 2rem;
+    font-weight: 800;
+}
+
+.detailActions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.actionBtn {
+    padding: 0.6rem 1.25rem;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--foreground);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+}
+
+.actionBtn:hover {
+    border-color: var(--accent-color);
+    background: var(--accent-light);
+}
+
+.actionBtnPrimary {
+    padding: 0.6rem 1.25rem;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border: none;
+    background: var(--accent-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+}
+
+.actionBtnPrimary:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+/* Funnel Visualization (Detail Page) */
+.funnelSection {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 32px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 2rem;
+}
+
+@media (prefers-color-scheme: dark) {
+    .funnelSection {
+        background: #0d1117;
+    }
+}
+
+.funnelTitle {
+    font-size: 1.15rem;
+    font-weight: 800;
+    margin-bottom: 2rem;
+}
+
+.funnelStages {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    overflow-x: auto;
+}
+
+.funnelStage {
+    flex: 1;
+    text-align: center;
+    position: relative;
+    min-width: 100px;
+}
+
+.funnelStageBar {
+    height: 48px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: white;
+    margin-bottom: 0.75rem;
+    position: relative;
+}
+
+.funnelStageLabel {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    opacity: 0.6;
+    margin-bottom: 0.25rem;
+}
+
+.funnelStagePercent {
+    font-size: 0.8rem;
+    font-weight: 600;
+    opacity: 0.4;
+}
+
+.funnelArrow {
+    flex-shrink: 0;
+    opacity: 0.2;
+    margin: 0 -4px;
+    margin-bottom: 1.5rem;
+}
+
+/* Daily Limit Control */
+.controlSection {
+    background: white;
+    padding: 2rem 2.5rem;
+    border-radius: 24px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+@media (prefers-color-scheme: dark) {
+    .controlSection {
+        background: #0d1117;
+    }
+}
+
+.controlLabel {
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.controlLabel span {
+    display: block;
+    font-size: 0.8rem;
+    opacity: 0.5;
+    font-weight: 400;
+    margin-top: 0.25rem;
+}
+
+.dailyLimitControl {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.dailyLimitInput {
+    width: 80px;
+    padding: 0.6rem 0.75rem;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    font-weight: 700;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.dailyLimitInput:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+.saveBtn {
+    padding: 0.6rem 1.25rem;
+    border-radius: 10px;
+    border: none;
+    background: var(--accent-color);
+    color: white;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.saveBtn:hover {
+    opacity: 0.9;
+}
+
+.saveBtn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Prospects Table */
+.prospectsSection {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 32px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+}
+
+@media (prefers-color-scheme: dark) {
+    .prospectsSection {
+        background: #0d1117;
+    }
+}
+
+.prospectsHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.prospectsTitle {
+    font-size: 1.15rem;
+    font-weight: 800;
+}
+
+.filterSelect {
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    font-weight: 600;
+    background: transparent;
+    cursor: pointer;
+}
+
+.prospectsTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.prospectsTable th {
+    text-align: left;
+    padding: 1rem;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.4;
+    border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+}
+
+.prospectsTable th:hover {
+    opacity: 0.7;
+}
+
+.prospectsTable tr {
+    transition: all 0.2s;
+}
+
+.prospectsTable tbody tr:hover td {
+    background: rgba(212, 175, 55, 0.02);
+}
+
+.prospectsTable td {
+    padding: 1rem;
+    font-size: 0.88rem;
+    border-bottom: 1px solid var(--border-color);
+    transition: background 0.2s;
+}
+
+.prospectEmail {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    opacity: 0.7;
+}
+
+.tierBadge {
+    padding: 0.15rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: rgba(0, 0, 0, 0.05);
+}
+
+@media (prefers-color-scheme: dark) {
+    .tierBadge {
+        background: rgba(255, 255, 255, 0.08);
+    }
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    font-size: 0.85rem;
+}
+
+.pageBtn {
+    padding: 0.4rem 0.9rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: transparent;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.pageBtn:hover:not(:disabled) {
+    border-color: var(--accent-color);
+    background: var(--accent-light);
+}
+
+.pageBtn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* Create Campaign Form */
+.formPanel {
+    background: white;
+    padding: 3rem;
+    border-radius: 32px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    max-width: 640px;
+    margin: 0 auto;
+}
+
+@media (prefers-color-scheme: dark) {
+    .formPanel {
+        background: #0d1117;
+    }
+}
+
+.formTitle {
+    font-family: var(--font-serif);
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+.formSubtitle {
+    font-size: 1rem;
+    opacity: 0.5;
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.formGroup label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    opacity: 0.6;
+}
+
+.formGroup input,
+.formGroup select {
+    padding: 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    background: rgba(0, 0, 0, 0.02);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+}
+
+@media (prefers-color-scheme: dark) {
+    .formGroup input,
+    .formGroup select {
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--foreground);
+    }
+}
+
+.formGroup input:focus,
+.formGroup select:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+.formRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.submitBtn {
+    background: var(--foreground);
+    color: var(--background);
+    padding: 1rem 2rem;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 1rem;
+    border: none;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.submitBtn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.submitBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.errorMessage {
+    color: #ef4444;
+    font-size: 0.85rem;
+    padding: 0.75rem;
+    background: rgba(239, 68, 68, 0.08);
+    border-radius: 8px;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.backLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: var(--foreground);
+    font-weight: 600;
+    font-size: 0.9rem;
+    opacity: 0.5;
+    margin-bottom: 2rem;
+    transition: opacity 0.2s;
+}
+
+.backLink:hover {
+    opacity: 1;
+}
+
+/* Loading State */
+.loadingState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 6rem 2rem;
+    text-align: center;
+    gap: 1rem;
+    opacity: 0.4;
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Empty State */
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 6rem 2rem;
+    text-align: center;
+    gap: 1rem;
+    opacity: 0.5;
+}
+
+.emptyState p {
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.emptyState span {
+    font-size: 0.9rem;
+    opacity: 0.7;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .statsGrid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .campaignGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .funnelStages {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .funnelArrow {
+        display: none;
+    }
+
+    .funnelStage {
+        min-width: 80px;
+    }
+}
+
+@media (max-width: 768px) {
+    .pageHeader {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .statsGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .detailHeader {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .controlSection {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .formRow {
+        grid-template-columns: 1fr;
+    }
+
+    .prospectsTable thead {
+        display: none;
+    }
+
+    .prospectsTable tr {
+        display: flex;
+        flex-direction: column;
+        padding: 1.25rem;
+        background: white;
+        border-radius: 16px;
+        margin-bottom: 0.75rem;
+        border: 1px solid var(--border-color);
+    }
+
+    .prospectsTable td {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.4rem 0;
+        border: none;
+    }
+
+    .prospectsTable td::before {
+        content: attr(data-label);
+        font-weight: 700;
+        opacity: 0.5;
+        font-size: 0.72rem;
+    }
+}
