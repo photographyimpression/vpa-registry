@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ShoppingBag, Globe, Code, CheckCircle, AlertCircle, Loader2, Copy, ExternalLink } from 'lucide-react';
 
-export default function IntegrationsPage() {
+export const dynamic = 'force-dynamic';
+
+function IntegrationsContent() {
   const { data: session } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -199,5 +201,13 @@ export default function IntegrationsPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function IntegrationsPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: '2rem' }}>Loading...</div>}>
+      <IntegrationsContent />
+    </Suspense>
   );
 }
