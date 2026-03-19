@@ -1,0 +1,52 @@
+{
+  "name": "VPA Integration Manager",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vpa-integration",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "integration-webhook",
+      "name": "Integration Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "vpa-integration"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst action = body.action;\n\nlet sql;\nif (action === 'connect') {\n  const creds = JSON.stringify(body.credentials || {}).replace(/'/g, \"''\");\n  sql = `INSERT INTO integrations (user_email, platform, store_url, credentials, status) VALUES ('${body.userEmail}', '${body.platform}', '${body.storeUrl}', '${creds}'::jsonb, 'connected') ON CONFLICT (user_email, store_url) DO UPDATE SET credentials = EXCLUDED.credentials, status = 'connected', updated_at = NOW() RETURNING *;`;\n} else if (action === 'disconnect') {\n  sql = `UPDATE integrations SET status = 'disconnected', updated_at = NOW() WHERE id = ${body.id} RETURNING *;`;\n} else if (action === 'list') {\n  sql = `SELECT * FROM integrations WHERE user_email = '${body.userEmail}' ORDER BY created_at DESC;`;\n} else {\n  sql = `SELECT 'unknown action' as error;`;\n}\n\nreturn [{ json: { sql, action } }];"
+      },
+      "id": "integration-router",
+      "name": "Route Action",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ $json.sql }}",
+        "options": {}
+      },
+      "id": "integration-db",
+      "name": "Execute Query",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [680, 300],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER",
+          "name": "n8n PostgreSQL"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Integration Webhook": { "main": [[{ "node": "Route Action", "type": "main", "index": 0 }]] },
+    "Route Action": { "main": [[{ "node": "Execute Query", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

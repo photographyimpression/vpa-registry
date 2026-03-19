@@ -1,0 +1,52 @@
+{
+  "name": "VPA Campaign Manager",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vpa-campaigns",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "campaign-webhook",
+      "name": "Campaign Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "vpa-campaigns"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst query = $input.first().json.query || {};\nconst action = body.action || query.action || 'list';\nconst id = body.id || query.id;\n\nlet sql;\nswitch(action) {\n  case 'create':\n    sql = `INSERT INTO campaigns (name, industry, city, country, daily_limit) VALUES ('${body.name}', '${body.industry}', '${body.city}', '${body.country || 'Canada'}', ${body.dailyLimit || 1}) RETURNING *;`;\n    break;\n  case 'update':\n    const sets = [];\n    if (body.status) sets.push(`status = '${body.status}'`);\n    if (body.dailyLimit) sets.push(`daily_limit = ${body.dailyLimit}`);\n    sql = `UPDATE campaigns SET ${sets.join(', ')}, updated_at = NOW() WHERE id = ${id} RETURNING *;`;\n    break;\n  case 'get':\n    sql = `SELECT c.*, (SELECT count(*) FROM prospects WHERE campaign_id = c.id) as total_prospects, (SELECT count(*) FROM prospects WHERE campaign_id = c.id AND status = 'emailed') as emails_sent, (SELECT count(*) FROM prospects WHERE campaign_id = c.id AND status IN ('opened','clicked','signed_up','integrated')) as emails_opened, (SELECT count(*) FROM prospects WHERE campaign_id = c.id AND status IN ('clicked','signed_up','integrated')) as emails_clicked, (SELECT count(*) FROM prospects WHERE campaign_id = c.id AND status IN ('signed_up','integrated')) as signups, (SELECT count(*) FROM prospects WHERE campaign_id = c.id AND status = 'integrated') as integrations FROM campaigns c WHERE c.id = ${id};`;\n    break;\n  case 'prospects':\n    const page = parseInt(query.page) || 1;\n    const limit = parseInt(query.limit) || 50;\n    const offset = (page - 1) * limit;\n    const statusFilter = query.status ? `AND status = '${query.status}'` : '';\n    sql = `SELECT * FROM prospects WHERE campaign_id = ${id} ${statusFilter} ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset};`;\n    break;\n  default:\n    sql = `SELECT c.*, (SELECT count(*) FROM prospects WHERE campaign_id = c.id) as total_prospects FROM campaigns c ORDER BY c.created_at DESC;`;\n}\n\nreturn [{ json: { sql, action } }];"
+      },
+      "id": "campaign-router",
+      "name": "Route Action",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ $json.sql }}",
+        "options": {}
+      },
+      "id": "campaign-db",
+      "name": "Execute Query",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [680, 300],
+      "credentials": {
+        "postgres": {
+          "id": "PLACEHOLDER",
+          "name": "n8n PostgreSQL"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Campaign Webhook": { "main": [[{ "node": "Route Action", "type": "main", "index": 0 }]] },
+    "Route Action": { "main": [[{ "node": "Execute Query", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}
