@@ -37,14 +37,14 @@ export async function fetchShopifyProducts(
   let url: string | null = `https://${shop}/admin/api/${SHOPIFY_API_VERSION}/products.json?limit=250&fields=id,title,images`;
 
   while (url) {
-    const res = await fetch(url, {
+    const response: Response = await fetch(url, {
       headers: { 'X-Shopify-Access-Token': accessToken },
     });
-    if (!res.ok) throw new Error(`Shopify API error: ${res.status}`);
-    const data = await res.json();
+    if (!response.ok) throw new Error(`Shopify API error: ${response.status}`);
+    const data = await response.json();
     products.push(...data.products);
 
-    const linkHeader = res.headers.get('link');
+    const linkHeader = response.headers.get('link');
     const nextMatch = linkHeader?.match(/<([^>]+)>;\s*rel="next"/);
     url = nextMatch ? nextMatch[1] : null;
   }
