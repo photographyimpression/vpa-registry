@@ -54,7 +54,7 @@ export default function Login() {
 
                 <div className={styles.authFooter} style={{ marginTop: '3rem' }}>
                     <p>Secured by <strong>VPA AUTHORITY PROTOCOL</strong></p>
-                    <p>Don&apos;t have an account? <Link href="/register">Inquire for Access</Link></p>
+                    <p>Don&apos;t have an account? <Link href="/register">Create one free</Link></p>
                     <Link href="/" className={styles.backLink}>
                         <ArrowLeft size={16} /> Back to Registry
                     </Link>
