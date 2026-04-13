@@ -9,10 +9,11 @@ export default function Footer() {
                 <div className={styles.footerBrand}>
                     <div className={styles.logoRow}>
                         <Image
-                            src="/vpa-logo.jpg"
+                            src="/vpa-logo-square.png"
                             alt="VPA Logo"
                             width={32}
                             height={32}
+                            style={{ borderRadius: '50%' }}
                             className={styles.footerLogoGraphic}
                         />
                         <span className={styles.footerBrandText}>VPA Registry</span>

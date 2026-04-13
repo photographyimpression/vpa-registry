@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { ShieldCheck, User, Menu, X, Globe } from 'lucide-react';
+import { User, Menu, X, Globe } from 'lucide-react';
 import styles from './Navbar.module.css';
 
 export default function Navbar() {
@@ -33,7 +34,7 @@ export default function Navbar() {
         >
             <div className={styles.container}>
                 <Link href="/" className={styles.navLogo}>
-                    <ShieldCheck color="var(--accent-color)" size={32} />
+                    <Image src="/vpa-logo-square.png" alt="VPA Logo" width={38} height={38} style={{ borderRadius: '50%' }} />
                     <span className={styles.brandText}>VPA <span>REGISTRY</span></span>
                 </Link>
 

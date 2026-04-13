@@ -22,11 +22,18 @@ const robotoMono = Roboto_Mono({
 export const metadata: Metadata = {
   title: 'VPA Central Registry | Verified Product Authenticity',
   description: 'The global standard in product authenticity and cryptographic certificate verification.',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: '32x32' },
+      { url: '/vpa-logo-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
   openGraph: {
     title: 'VPA Central Registry',
     description: 'The global standard in product authenticity.',
-    url: 'https://registry.vpa.gov',
-    siteName: 'VPA Network',
+    url: 'https://vparegistry.com',
+    siteName: 'VPA Registry',
     locale: 'en_US',
     type: 'website',
   },

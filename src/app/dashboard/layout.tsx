@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { SessionProvider, useSession, signOut } from 'next-auth/react';
-import { LayoutDashboard, Database, Activity, Key, Settings, LogOut, ShieldCheck, User } from 'lucide-react';
+import Image from 'next/image';
+import { LayoutDashboard, Database, Activity, Key, Settings, LogOut, User } from 'lucide-react';
 import styles from './Dashboard.module.css';
 
 // Force dynamic rendering — dashboard is always auth-gated, never static
@@ -27,7 +28,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
         <div className={styles.dashboardShell}>
             <aside className={styles.sidebar}>
                 <div className={styles.sidebarHeader}>
-                    <ShieldCheck color="var(--accent-color)" size={32} />
+                    <Image src="/vpa-logo-square.png" alt="VPA Logo" width={34} height={34} style={{ borderRadius: '50%' }} />
                     <span className={styles.sidebarBrand}>Partner Portal</span>
                 </div>
 
