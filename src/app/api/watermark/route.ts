@@ -124,71 +124,86 @@ export async function applyWatermark(imageBuffer: Buffer, vpaId: string): Promis
             .toBuffer();
     }
 
-    // Scale QR code proportionally (roughly 14% of the shorter dimension)
-    const qrSize = Math.max(80, Math.min(160, Math.floor(Math.min(width, height) * 0.14)));
-    const padding = Math.max(12, Math.floor(qrSize * 0.12));
+    // --- Trust banner (full-width bar at bottom) ---
+    const bannerHeight = Math.max(70, Math.min(100, Math.floor(height * 0.08)));
+    const logoSize = bannerHeight - 16;
+    const bannerQrSize = bannerHeight - 16;
+    const goldColor = '#C8A96E';
+    const titleFontSize = Math.max(13, Math.floor(bannerHeight * 0.19));
+    const idFontSize = Math.max(10, Math.floor(bannerHeight * 0.14));
+    const subtitleFontSize = Math.max(8, Math.floor(bannerHeight * 0.11));
+    const scanFontSize = Math.max(7, Math.floor(bannerHeight * 0.09));
+    const textLeft = 8 + logoSize + 14;
 
-    // --- Generate QR code PNG ---
-    const qrBuffer = await QRCode.toBuffer(certUrl, {
+    // Resize VPA logo for banner
+    const fs = await import('fs');
+    const path = await import('path');
+    const logoPath = path.resolve(process.cwd(), 'public/vpa-logo-square.png');
+    const logoBuffer = await sharp(fs.readFileSync(logoPath))
+        .resize(logoSize, logoSize, { fit: 'cover' })
+        .png()
+        .toBuffer();
+
+    // Generate banner QR code
+    const bannerQrBuffer = await QRCode.toBuffer(certUrl, {
         type: 'png',
-        width: qrSize,
+        width: bannerQrSize,
         margin: 1,
         color: { dark: '#000000', light: '#FFFFFF' },
     });
 
-    // --- Add white border + drop shadow around QR ---
-    const qrBorder = 6;
-    const qrWithBorder = await sharp({
+    // Banner background
+    const bannerBg = await sharp({
         create: {
-            width: qrSize + qrBorder * 2,
-            height: qrSize + qrBorder * 2,
+            width: width,
+            height: bannerHeight,
             channels: 4,
-            background: { r: 255, g: 255, b: 255, alpha: 1 },
+            background: { r: 15, g: 20, b: 30, alpha: 230 },
         },
-    })
-        .composite([{ input: qrBuffer, top: qrBorder, left: qrBorder }])
+    }).png().toBuffer();
+
+    // Banner text SVG
+    const bannerTextSvg = Buffer.from(`
+        <svg width="${width}" height="${bannerHeight}" xmlns="http://www.w3.org/2000/svg">
+            <rect x="0" y="0" width="${width}" height="2" fill="${goldColor}" />
+            <text x="${textLeft}" y="${Math.floor(bannerHeight * 0.32)}"
+                font-family="Arial, Helvetica, sans-serif"
+                font-size="${titleFontSize}" font-weight="bold" fill="${goldColor}"
+                letter-spacing="2">VPA VERIFIED · REAL IMAGE</text>
+            <text x="${textLeft}" y="${Math.floor(bannerHeight * 0.55)}"
+                font-family="Courier New, Courier, monospace"
+                font-size="${idFontSize}" fill="#FFFFFF">${vpaId}</text>
+            <text x="${textLeft}" y="${Math.floor(bannerHeight * 0.76)}"
+                font-family="Arial, Helvetica, sans-serif"
+                font-size="${subtitleFontSize}" fill="rgba(255,255,255,0.55)">Scan QR to confirm at vparegistry.com</text>
+            <text x="${width - bannerQrSize - 8 - 8}" y="${Math.floor(bannerHeight * 0.42)}"
+                font-family="Arial, Helvetica, sans-serif"
+                font-size="${scanFontSize}" font-weight="bold" fill="${goldColor}"
+                text-anchor="end" letter-spacing="1">SCAN TO</text>
+            <text x="${width - bannerQrSize - 8 - 8}" y="${Math.floor(bannerHeight * 0.62)}"
+                font-family="Arial, Helvetica, sans-serif"
+                font-size="${scanFontSize}" font-weight="bold" fill="${goldColor}"
+                text-anchor="end" letter-spacing="1">VERIFY</text>
+        </svg>`);
+
+    // Compose the banner
+    const bannerComposite = await sharp(bannerBg)
+        .composite([
+            { input: bannerTextSvg, top: 0, left: 0 },
+            { input: logoBuffer, top: 8, left: 8 },
+            { input: bannerQrBuffer, top: 8, left: width - bannerQrSize - 8 },
+        ])
         .png()
         .toBuffer();
 
-    const qrFinalSize = qrSize + qrBorder * 2;
-
-    // --- Certification badge SVG (bottom-left) ---
-    const badgeW = Math.min(260, Math.floor(width * 0.32));
-    const badgeH = 52;
-    const goldColor = '#C8A96E';
-    const badge = Buffer.from(`
-        <svg width="${badgeW}" height="${badgeH}" xmlns="http://www.w3.org/2000/svg">
-          <rect width="${badgeW}" height="${badgeH}" rx="5"
-            fill="rgba(0,0,0,0.78)" />
-          <line x1="0" y1="0" x2="${badgeW}" y2="0"
-            stroke="${goldColor}" stroke-width="2"/>
-          <text x="10" y="20"
-            font-family="Arial, Helvetica, sans-serif"
-            font-size="11" font-weight="bold" fill="${goldColor}">VPA REGISTRY</text>
-          <text x="10" y="34"
-            font-family="Courier New, Courier, monospace"
-            font-size="9" fill="#FFFFFF">${vpaId}</text>
-          <text x="10" y="47"
-            font-family="Arial, Helvetica, sans-serif"
-            font-size="7.5" fill="rgba(255,255,255,0.55)">CERTIFIED AUTHENTIC · vparegistry.com</text>
-        </svg>`);
-
-    // --- Composite everything ---
+    // --- Composite banner onto original image ---
     // Use JPEG output (quality 92) to reduce memory + output size vs PNG.
     return sharp(imageBuffer)
         .composite([
-            // QR code — bottom-right corner
             {
-                input: qrWithBorder,
-                top: height - qrFinalSize - padding,
-                left: width - qrFinalSize - padding,
-                blend: 'over',
-            },
-            // Badge — bottom-left corner
-            {
-                input: badge,
-                top: height - badgeH - padding,
-                left: padding,
+                input: bannerComposite,
+                top: height - bannerHeight,
+                left: 0,
                 blend: 'over',
             },
         ])
