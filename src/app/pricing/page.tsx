@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ShieldCheck, Package, Building2, Check, ArrowRight, Zap, Loader2, Gift } from 'lucide-react';
+import { ShieldCheck, Package, Building2, Check, ArrowRight, Zap, Loader2, Gift, TrendingUp } from 'lucide-react';
 import styles from './Pricing.module.css';
 
 const plans = [
@@ -18,11 +18,11 @@ const plans = [
         href: '/register',
         featured: false,
         features: [
-            'Up to 50 certificates / month',
+            'Up to 10 certificates / month',
             'Single image upload',
             'QR code verification seal',
             'Public registry listing',
-            'VPA watermark on verification',
+            'VPA trust mark on all certificates',
             'Email support',
         ],
     },
@@ -30,39 +30,56 @@ const plans = [
         name: 'Starter',
         key: 'starter' as const,
         icon: Package,
-        monthlyPrice: 499,
-        annualPrice: 399,
-        desc: 'For resellers authenticating their full inventory with custom branding.',
+        monthlyPrice: 79,
+        annualPrice: 69,
+        desc: 'For small shops authenticating their full inventory.',
         cta: 'Start Free Trial',
         ctaStyle: 'gold',
         featured: true,
         features: [
-            'Up to 500 certificates / month',
-            'Bulk upload (up to 500 images)',
-            'Custom branding on certificates',
-            'No VPA watermark',
-            'Advanced analytics dashboard',
-            'API access (5,000 req/day)',
-            'Priority email & chat support',
+            'Up to 200 certificates / month',
+            'Bulk upload (up to 200 images)',
+            'Basic analytics dashboard',
+            'VPA trust mark on all certificates',
+            'Email support',
         ],
     },
     {
         name: 'Professional',
         key: 'professional' as const,
         icon: Zap,
-        monthlyPrice: 1999,
-        annualPrice: 1599,
-        desc: 'For high-volume sellers and marketplaces needing full integration.',
+        monthlyPrice: 299,
+        annualPrice: 249,
+        desc: 'For growing businesses needing analytics and API access.',
         cta: 'Start Free Trial',
         ctaStyle: 'outline',
         featured: false,
         features: [
-            'Up to 5,000 certificates / month',
+            'Up to 2,000 certificates / month',
             'Bulk upload (unlimited)',
-            'White-label verification pages',
-            'Shopify / WooCommerce integration',
             'Advanced analytics & reports',
+            'API access (10,000 req/day)',
+            'Up to 3 team members',
+            'Priority email & chat support',
+        ],
+    },
+    {
+        name: 'Business',
+        key: 'business' as const,
+        icon: TrendingUp,
+        monthlyPrice: 999,
+        annualPrice: 849,
+        desc: 'For multi-location businesses and high-volume sellers.',
+        cta: 'Start Free Trial',
+        ctaStyle: 'outline',
+        featured: false,
+        features: [
+            'Up to 10,000 certificates / month',
+            'Bulk upload (unlimited)',
+            'Advanced analytics & reports',
+            'Shopify / WooCommerce integration',
             'Unlimited API access',
+            'Up to 10 team members',
             'Dedicated account manager',
             '99.9% uptime SLA',
         ],
@@ -96,7 +113,7 @@ export default function PricingPage() {
     const [loading, setLoading] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    async function handleCheckout(plan: 'starter' | 'professional') {
+    async function handleCheckout(plan: 'starter' | 'professional' | 'business') {
         setLoading(plan);
         setError(null);
         try {

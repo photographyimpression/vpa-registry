@@ -19,8 +19,8 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
-    const { plan, annual } = await req.json() as { plan: 'starter' | 'professional'; annual: boolean };
-    if (!plan || !['starter', 'professional'].includes(plan)) {
+    const { plan, annual } = await req.json() as { plan: 'starter' | 'professional' | 'business'; annual: boolean };
+    if (!plan || !['starter', 'professional', 'business'].includes(plan)) {
         return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
     }
 

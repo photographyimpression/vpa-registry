@@ -43,3 +43,10 @@ next-env.d.ts
 # Google Cloud SDK (local tooling)
 google-cloud-sdk/
 google-cloud-cli-darwin-arm.tar.gz
+
+# Email setup — credentials (never commit)
+scripts/email-setup/email-credentials.csv
+scripts/email-setup/mail-data/
+scripts/email-setup/mail-state/
+scripts/email-setup/mail-logs/
+scripts/email-setup/config/

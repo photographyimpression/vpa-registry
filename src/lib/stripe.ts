@@ -5,7 +5,7 @@ export const stripe = process.env.STRIPE_SECRET_KEY
     ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2026-02-25.clover' })
     : null;
 
-export type PlanTier = 'free' | 'starter' | 'professional' | 'enterprise';
+export type PlanTier = 'free' | 'starter' | 'professional' | 'business' | 'enterprise';
 
 // Map Stripe price IDs → plan tier
 function priceIdToPlan(priceId: string): PlanTier {
@@ -13,9 +13,12 @@ function priceIdToPlan(priceId: string): PlanTier {
     const starterAnnual   = process.env.STRIPE_STARTER_ANNUAL_PRICE_ID;
     const proMonthly      = process.env.STRIPE_PRO_MONTHLY_PRICE_ID;
     const proAnnual       = process.env.STRIPE_PRO_ANNUAL_PRICE_ID;
+    const bizMonthly      = process.env.STRIPE_BUSINESS_MONTHLY_PRICE_ID;
+    const bizAnnual       = process.env.STRIPE_BUSINESS_ANNUAL_PRICE_ID;
 
     if (priceId === starterMonthly || priceId === starterAnnual)  return 'starter';
     if (priceId === proMonthly     || priceId === proAnnual)      return 'professional';
+    if (priceId === bizMonthly     || priceId === bizAnnual)      return 'business';
     return 'starter'; // default for any other active subscription
 }
 
@@ -47,13 +50,18 @@ export async function getSubscriptionPlan(email: string | null | undefined): Pro
 }
 
 /** Map plan → price ID for a checkout session */
-export function getPriceId(plan: 'starter' | 'professional', annual: boolean): string | null {
+export function getPriceId(plan: 'starter' | 'professional' | 'business', annual: boolean): string | null {
     if (plan === 'starter') {
         return annual
             ? (process.env.STRIPE_STARTER_ANNUAL_PRICE_ID ?? null)
             : (process.env.STRIPE_STARTER_MONTHLY_PRICE_ID ?? null);
     }
+    if (plan === 'professional') {
+        return annual
+            ? (process.env.STRIPE_PRO_ANNUAL_PRICE_ID ?? null)
+            : (process.env.STRIPE_PRO_MONTHLY_PRICE_ID ?? null);
+    }
     return annual
-        ? (process.env.STRIPE_PRO_ANNUAL_PRICE_ID ?? null)
-        : (process.env.STRIPE_PRO_MONTHLY_PRICE_ID ?? null);
+        ? (process.env.STRIPE_BUSINESS_ANNUAL_PRICE_ID ?? null)
+        : (process.env.STRIPE_BUSINESS_MONTHLY_PRICE_ID ?? null);
 }

@@ -8,8 +8,9 @@ import Link from 'next/link';
 
 const PLAN_LABELS: Record<string, string> = {
     free:         'Free',
-    starter:      'Starter — $49/mo',
-    professional: 'Professional — $149/mo',
+    starter:      'Starter — $79/mo',
+    professional: 'Professional — $299/mo',
+    business:     'Business — $999/mo',
     enterprise:   'Enterprise',
 };
 
@@ -17,6 +18,7 @@ const PLAN_BADGE_COLORS: Record<string, string> = {
     free:         'rgba(255,255,255,0.1)',
     starter:      'rgba(200,169,110,0.15)',
     professional: 'rgba(200,169,110,0.3)',
+    business:     'rgba(200,169,110,0.4)',
     enterprise:   'rgba(200,169,110,0.45)',
 };
 

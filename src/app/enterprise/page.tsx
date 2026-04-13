@@ -11,7 +11,7 @@ export default function Enterprise() {
                 <div className={mktgStyles.marketingBadge}>VPA Enterprise</div>
                 <h1 className={mktgStyles.marketingTitle}>Scale your trust operations.</h1>
                 <p className={mktgStyles.marketingSubtitle}>
-                    Dedicated API access, custom verification portal white-labeling, and direct integration support for high-volume certification operations.
+                    Dedicated API access, custom SLA arrangements, and direct integration support for high-volume certification operations.
                 </p>
                 <Link href="/" className={styles.ctaBtn} style={{ display: 'inline-flex', margin: '0 auto', background: 'transparent', color: 'var(--foreground)', border: '1px solid var(--border-color)' }}>
                     <ArrowLeft size={16} /> Return to Portal

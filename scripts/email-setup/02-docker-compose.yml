@@ -1,0 +1,40 @@
+version: "3.8"
+
+# =============================================================================
+# VPA Registry — docker-mailserver
+# Self-hosted mail server for 100 warming mailboxes on OVH VPS
+#
+# Deploy:
+#   docker compose -f 02-docker-compose.yml up -d
+#
+# This container coexists with existing services on the OVH server.
+# Ports used: 25 (SMTP), 587 (Submission), 993 (IMAPS)
+# Make sure these are not already in use on your server:
+#   sudo ss -tlnp | grep -E ':25|:587|:993'
+# =============================================================================
+
+services:
+  mailserver:
+    image: ghcr.io/docker-mailserver/docker-mailserver:latest
+    container_name: mailserver
+    hostname: mail.vparegistry.com
+    env_file: mailserver.env
+    ports:
+      - "25:25"       # SMTP (inbound) — must be open on OVH firewall
+      - "587:587"     # SMTP Submission (outbound, authenticated)
+      - "993:993"     # IMAPS (for Mailflow.io to connect)
+    volumes:
+      - ./mail-data:/var/mail
+      - ./mail-state:/var/mail-state
+      - ./mail-logs:/var/log/mail
+      - ./config:/tmp/docker-mailserver
+      - /etc/localtime:/etc/localtime:ro
+    restart: always
+    stop_grace_period: 1m
+    cap_add:
+      - NET_ADMIN
+    healthcheck:
+      test: "ss --listening --tcp | grep -P 'LISTEN.+:smtp' || exit 1"
+      timeout: 3s
+      retries: 5
+      start_period: 90s
