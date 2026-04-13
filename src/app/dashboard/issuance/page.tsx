@@ -56,7 +56,8 @@ export default function IssuancePage() {
         setErrorMsg('');
 
         const formEl = e.currentTarget;
-        const productName = (formEl.elements.namedItem('productName') as HTMLInputElement)?.value || '';
+        const fileBaseName = singleFile.name.replace(/\.[^.]+$/, '');
+        const productName = (formEl.elements.namedItem('productName') as HTMLInputElement)?.value || fileBaseName;
         const batchId = (formEl.elements.namedItem('batchId') as HTMLInputElement)?.value || '';
 
         try {
@@ -298,12 +299,12 @@ export default function IssuancePage() {
                             )}
                             <form className={styles.issuanceForm} onSubmit={handleIssue}>
                                 <div className={styles.formGroup}>
-                                    <label>Product Name</label>
-                                    <input name="productName" type="text" placeholder="e.g. Luxora Limited Edition A1" required />
+                                    <label>Product Name <span style={{ opacity: 0.4, fontWeight: 400 }}>(optional)</span></label>
+                                    <input name="productName" type="text" placeholder={singleFile ? singleFile.name.replace(/\.[^.]+$/, '') : 'Uses filename if empty'} />
                                 </div>
                                 <div className={styles.formGroup}>
-                                    <label>Batch / SKU ID</label>
-                                    <input name="batchId" type="text" placeholder="BATCH-2024-X1" required />
+                                    <label>Batch / SKU ID <span style={{ opacity: 0.4, fontWeight: 400 }}>(optional)</span></label>
+                                    <input name="batchId" type="text" placeholder="Optional" />
                                 </div>
                                 {errorMsg && (
                                     <p style={{ color: '#ef4444', fontSize: '0.85rem', padding: '0.75rem', background: 'rgba(239,68,68,0.08)', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.2)' }}>
