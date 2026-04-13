@@ -71,7 +71,7 @@ export default function DashboardPage() {
                     <span className={styles.statLabel}>Certification Engine</span>
                     <span className={styles.statValue} style={{ fontSize: '1.2rem', paddingTop: '0.5rem' }}>Active</span>
                     <div className={`${styles.statTrend} ${styles.trendUp}`}>
-                        <span className={styles.statusDot}></span> n8n Workflow Online
+                        <span className={styles.statusDot}></span> All Systems Operational
                     </div>
                 </div>
 
