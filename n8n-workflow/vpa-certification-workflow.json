@@ -11,7 +11,7 @@
                 }
             },
             "id": "node-webhook",
-            "name": "📥 Receive Certification Request",
+            "name": "\ud83d\udce5 Receive Certification Request",
             "type": "n8n-nodes-base.webhook",
             "typeVersion": 2,
             "position": [
@@ -22,14 +22,228 @@
         },
         {
             "parameters": {
-                "jsCode": "// ── Extract fields from the incoming request ──────────────────────────\nconst body = $input.first().json.body || $input.first().json;\n\nconst vpaId               = body.vpaId            || 'VPA-UNKNOWN';\nconst productName         = body.productName      || 'Unknown Product';\nconst manufacturerName    = body.manufacturerName || 'Unknown Manufacturer';\nconst deviceMetadata      = body.deviceMetadata   || body.batchId || 'N/A';\nconst batchId             = body.batchId          || 'N/A';\nconst issueDate           = body.issueDate        || new Date().toISOString().split('T')[0];\nconst registryUrl         = body.registryUrl      || `https://vparegistry.com/id/${vpaId}`;\nconst certifiedImageBase64 = body.certifiedImageBase64 || '';\n\nreturn [{\n  json: { vpaId, productName, manufacturerName, deviceMetadata, batchId, issueDate, registryUrl, certifiedImageBase64 }\n}];"
+                "jsCode": "// \u2500\u2500 Extract fields from the incoming request \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst body = $input.first().json.body || $input.first().json;\n\nconst imageBase64       = body.imageBase64       || '';\nconst mimeType          = body.mimeType          || 'image/jpeg';\nconst fileName          = body.fileName          || 'unknown.jpg';\nconst productName       = body.productName       || 'Unknown Product';\nconst manufacturerName  = body.manufacturerName  || 'Unknown Manufacturer';\nconst deviceMetadata    = body.deviceMetadata    || body.batchId || 'N/A';\nconst batchId           = body.batchId           || 'N/A';\n\nif (!imageBase64) {\n  throw new Error('No image data received');\n}\n\nreturn [{\n  json: { imageBase64, mimeType, fileName, productName, manufacturerName, deviceMetadata, batchId }\n}];"
             },
             "id": "node-extract",
-            "name": "🔍 Extract & Validate Data",
+            "name": "\ud83d\udd0d Extract & Validate Data",
             "type": "n8n-nodes-base.code",
             "typeVersion": 2,
             "position": [
                 460,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "// \u2500\u2500 EXIF Metadata Check \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n// Checks for signs of AI-generated images:\n// 1. Missing EXIF data entirely\n// 2. Known AI tool signatures in EXIF fields\n//\n// Returns: { exifStatus: 'pass' | 'suspicious' | 'fail', reason: string }\n\nconst item = $input.first().json;\nconst base64 = item.imageBase64;\nconst mimeType = item.mimeType;\n\n// Only JPEG and TIFF carry meaningful EXIF\nif (mimeType !== 'image/jpeg' && mimeType !== 'image/tiff') {\n  return [{ json: { ...item, exifStatus: 'suspicious', exifReason: 'Non-JPEG/TIFF format \u2014 cannot verify EXIF metadata' } }];\n}\n\n// Decode base64 to check for EXIF markers\nconst buf = Buffer.from(base64, 'base64');\n\n// JPEG EXIF starts with APP1 marker (FF E1) containing 'Exif\\0\\0'\nlet hasExif = false;\nlet exifFields = '';\n\nfor (let i = 0; i < buf.length - 6; i++) {\n  if (buf[i] === 0xFF && buf[i + 1] === 0xE1) {\n    // Check for 'Exif' string\n    if (buf[i + 4] === 0x45 && buf[i + 5] === 0x78 &&\n        buf[i + 6] === 0x69 && buf[i + 7] === 0x66) {\n      hasExif = true;\n      // Extract a chunk of EXIF data for AI signature scanning\n      const exifChunk = buf.slice(i, Math.min(i + 2000, buf.length));\n      exifFields = exifChunk.toString('ascii', 0, exifChunk.length).replace(/[^\\x20-\\x7E]/g, ' ');\n      break;\n    }\n  }\n}\n\nif (!hasExif) {\n  return [{ json: { ...item, exifStatus: 'suspicious', exifReason: 'Image lacks EXIF metadata \u2014 possible AI-generated or heavily edited image' } }];\n}\n\n// Check for known AI tool signatures in EXIF\nconst aiSignatures = [\n  'midjourney', 'stable diffusion', 'dall-e', 'dall\u00b7e', 'dalle',\n  'adobe firefly', 'generative ai', 'ai generated',\n  'comfyui', 'automatic1111', 'invoke ai', 'novelai'\n];\n\nconst exifLower = exifFields.toLowerCase();\nconst foundSignature = aiSignatures.find(sig => exifLower.includes(sig));\n\nif (foundSignature) {\n  return [{ json: { ...item, exifStatus: 'fail', exifReason: `AI tool signature detected in EXIF: \"${foundSignature}\"` } }];\n}\n\nreturn [{ json: { ...item, exifStatus: 'pass', exifReason: 'EXIF metadata present, no AI signatures detected' } }];"
+            },
+            "id": "node-exif-check",
+            "name": "\ud83d\udd2c EXIF Metadata Check",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                680,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "strict"
+                    },
+                    "conditions": [
+                        {
+                            "id": "exif-fail",
+                            "leftValue": "={{ $json.exifStatus }}",
+                            "rightValue": "fail",
+                            "operator": {
+                                "type": "string",
+                                "operation": "equals"
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                }
+            },
+            "id": "node-exif-decision",
+            "name": "\u2753 EXIF Failed?",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2,
+            "position": [
+                900,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "https://api.anthropic.com/v1/messages",
+                "authentication": "genericCredentialType",
+                "genericAuthType": "httpHeaderAuth",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "anthropic-version",
+                            "value": "2023-06-01"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={{ JSON.stringify({\n  model: 'claude-haiku-4-5-20251001',\n  max_tokens: 512,\n  messages: [{\n    role: 'user',\n    content: [\n      {\n        type: 'image',\n        source: {\n          type: 'base64',\n          media_type: $json.mimeType,\n          data: $json.imageBase64\n        }\n      },\n      {\n        type: 'text',\n        text: 'You are an image authenticity detector for a product verification registry. Analyze this image and determine if it is:\\n1. A real photograph of a physical product\\n2. An AI-generated image (Midjourney, DALL-E, Stable Diffusion, etc.)\\n3. A screenshot, meme, or non-product image\\n\\nRespond with ONLY a JSON object (no markdown, no explanation):\\n{\"verdict\": \"real\" | \"ai_generated\" | \"not_a_product\", \"confidence\": 0.0-1.0, \"reason\": \"brief explanation\"}'\n      }\n    ]\n  }]\n}) }}",
+                "options": {
+                    "timeout": 30000
+                }
+            },
+            "id": "node-claude-vision",
+            "name": "\ud83e\udd16 Claude Vision AI Check",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4,
+            "position": [
+                1120,
+                420
+            ],
+            "credentials": {
+                "httpHeaderAuth": {
+                    "id": "REPLACE_WITH_CREDENTIAL_ID",
+                    "name": "Anthropic API Key"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "jsCode": "// \u2500\u2500 Parse Claude Vision response and make final decision \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst item = $('\ud83d\udd2c EXIF Metadata Check').first().json;\nconst claudeResponse = $input.first().json;\n\nlet verdict = 'real';\nlet confidence = 0;\nlet reason = 'Unable to parse AI detection response';\n\ntry {\n  const content = claudeResponse.content?.[0]?.text || '';\n  // Extract JSON from response (handle possible markdown wrapping)\n  const jsonMatch = content.match(/\\{[^}]+\\}/);\n  if (jsonMatch) {\n    const parsed = JSON.parse(jsonMatch[0]);\n    verdict = parsed.verdict || 'real';\n    confidence = parsed.confidence || 0;\n    reason = parsed.reason || 'No reason provided';\n  }\n} catch (e) {\n  reason = 'AI detection response could not be parsed: ' + e.message;\n}\n\nconst approved = verdict === 'real';\n\nreturn [{\n  json: {\n    ...item,\n    aiVerdict: verdict,\n    aiConfidence: confidence,\n    aiReason: reason,\n    approved\n  }\n}];"
+            },
+            "id": "node-parse-ai",
+            "name": "\ud83d\udcca Parse AI Verdict",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1340,
+                420
+            ]
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "strict"
+                    },
+                    "conditions": [
+                        {
+                            "id": "approved-check",
+                            "leftValue": "={{ $json.approved }}",
+                            "rightValue": true,
+                            "operator": {
+                                "type": "boolean",
+                                "operation": "true"
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                }
+            },
+            "id": "node-ai-decision",
+            "name": "\u2705 Approved?",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2,
+            "position": [
+                1560,
+                420
+            ]
+        },
+        {
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "={{ JSON.stringify({ rejected: true, error: $json.exifReason || $json.aiReason || 'Image rejected by AI detection', reason: $json.exifReason || $json.aiReason || 'Unknown' }) }}",
+                "options": {
+                    "responseCode": 422
+                }
+            },
+            "id": "node-reject-exif",
+            "name": "\ud83d\udeab Reject (EXIF)",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1,
+            "position": [
+                1120,
+                180
+            ]
+        },
+        {
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "={{ JSON.stringify({ rejected: true, error: 'Image rejected: ' + ($json.aiReason || 'AI-generated or non-product image detected'), reason: $json.aiReason || 'AI detection failed', verdict: $json.aiVerdict || 'unknown', confidence: $json.aiConfidence || 0 }) }}",
+                "options": {
+                    "responseCode": 422
+                }
+            },
+            "id": "node-reject-ai",
+            "name": "\ud83d\udeab Reject (AI)",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1,
+            "position": [
+                1780,
+                560
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "// \u2500\u2500 Generate VPA ID + prepare for watermarking \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst item = $input.first().json;\n\nconst chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';\nconst part = Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');\nconst num = String(Math.floor(1000 + Math.random() * 9000));\nconst vpaId = `VPA-${part}-${num}`;\n\nconst appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://vparegistry.com';\nconst registryUrl = `${appUrl}/id/${vpaId}`;\nconst issueDate = new Date().toISOString().split('T')[0];\n\nreturn [{\n  json: {\n    ...item,\n    vpaId,\n    registryUrl,\n    issueDate\n  }\n}];"
+            },
+            "id": "node-generate-id",
+            "name": "\ud83c\udd94 Generate VPA ID",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                1780,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "={{ (process.env.NEXT_PUBLIC_APP_URL || 'https://vparegistry.com') + '/api/watermark' }}",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "x-vpa-watermark-secret",
+                            "value": "={{ process.env.WATERMARK_SECRET || '' }}"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={{ JSON.stringify({ imageBase64: $json.imageBase64, vpaId: $json.vpaId }) }}",
+                "options": {
+                    "timeout": 30000
+                }
+            },
+            "id": "node-watermark",
+            "name": "\ud83d\uddbc\ufe0f Watermark Image",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4,
+            "position": [
+                2000,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "// \u2500\u2500 Prepare watermarked image for Drive upload \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst prevData = $('\ud83c\udd94 Generate VPA ID').first().json;\nconst watermarkResponse = $input.first().json;\n\nconst certifiedImageBase64 = watermarkResponse.watermarkedImageBase64 || '';\n\nif (!certifiedImageBase64) {\n  throw new Error('Watermark endpoint did not return image data');\n}\n\nreturn [{\n  json: {\n    ...prevData,\n    certifiedImageBase64\n  }\n}];"
+            },
+            "id": "node-prepare-upload",
+            "name": "\ud83d\udce6 Prepare Upload",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                2220,
                 300
             ]
         },
@@ -43,21 +257,27 @@
                     "mode": "list"
                 },
                 "folderId": {
-                    "__rl": true,
-                    "value": "VPA-Certificates",
-                    "mode": "list"
+                    "mode": "id",
+                    "value": "1X_k2Vn2viQLNS1HYiHKmpPYABCA5w0iX"
                 },
                 "binaryData": false,
-                "mediaUrl": "={{ 'data:image/png;base64,' + $json.certifiedImageBase64 }}"
+                "mediaUrl": "={{ 'data:image/jpeg;base64,' + $json.certifiedImageBase64 }}",
+                "authentication": "serviceAccount"
             },
             "id": "node-drive-upload",
-            "name": "☁️ Upload to Google Drive",
+            "name": "\u2601\ufe0f Upload to Google Drive",
             "type": "n8n-nodes-base.googleDrive",
             "typeVersion": 3,
             "position": [
-                680,
+                2440,
                 300
-            ]
+            ],
+            "credentials": {
+                "googleApi": {
+                    "id": "QhzHzIzhtkBZiw8I",
+                    "name": "VPA Google Credentials"
+                }
+            }
         },
         {
             "parameters": {
@@ -69,13 +289,19 @@
                 }
             },
             "id": "node-drive-link",
-            "name": "🔗 Get Public Image URL",
+            "name": "\ud83d\udd17 Get Public Image URL",
             "type": "n8n-nodes-base.googleDrive",
             "typeVersion": 3,
             "position": [
-                900,
+                2660,
                 300
-            ]
+            ],
+            "credentials": {
+                "googleApi": {
+                    "id": "QhzHzIzhtkBZiw8I",
+                    "name": "VPA Google Credentials"
+                }
+            }
         },
         {
             "parameters": {
@@ -93,91 +319,200 @@
                 "columns": {
                     "mappingMode": "defineBelow",
                     "value": {
-                        "VPA_Tracking_ID": "={{ $('🔍 Extract & Validate Data').item.json.vpaId }}",
-                        "Cert_Issue_Date": "={{ $('🔍 Extract & Validate Data').item.json.issueDate }}",
-                        "Manufacturer_Name": "={{ $('🔍 Extract & Validate Data').item.json.manufacturerName }}",
-                        "Device_Metadata": "={{ $('🔍 Extract & Validate Data').item.json.deviceMetadata }}",
-                        "Master_Image_URL": "={{ $json.webViewLink || $('🔍 Extract & Validate Data').item.json.registryUrl }}",
-                        "Product_Name": "={{ $('🔍 Extract & Validate Data').item.json.productName }}",
+                        "VPA_Tracking_ID": "={{ $('\ud83d\udce6 Prepare Upload').item.json.vpaId }}",
+                        "Cert_Issue_Date": "={{ $('\ud83d\udce6 Prepare Upload').item.json.issueDate }}",
+                        "Manufacturer_Name": "={{ $('\ud83d\udce6 Prepare Upload').item.json.manufacturerName }}",
+                        "Device_Metadata": "={{ $('\ud83d\udce6 Prepare Upload').item.json.deviceMetadata }}",
+                        "Master_Image_URL": "={{ $json.webViewLink || $('\ud83d\udce6 Prepare Upload').item.json.registryUrl }}",
+                        "Product_Name": "={{ $('\ud83d\udce6 Prepare Upload').item.json.productName }}",
                         "Certified_Image_URL": "={{ $json.webViewLink || '' }}"
                     }
                 },
-                "options": {}
+                "options": {},
+                "authentication": "serviceAccount"
             },
             "id": "node-sheets",
-            "name": "📊 Write to Google Sheets",
+            "name": "\ud83d\udcca Write to Google Sheets",
             "type": "n8n-nodes-base.googleSheets",
             "typeVersion": 4,
             "position": [
-                1120,
+                2880,
                 300
-            ]
+            ],
+            "credentials": {
+                "googleApi": {
+                    "id": "QhzHzIzhtkBZiw8I",
+                    "name": "VPA Google Credentials"
+                }
+            }
         },
         {
             "parameters": {
                 "respondWith": "json",
-                "responseBody": "={{ JSON.stringify({ vpaId: $('🔍 Extract & Validate Data').item.json.vpaId, certifiedImageUrl: $('🔗 Get Public Image URL').item.json.webViewLink || '', registryUrl: $('🔍 Extract & Validate Data').item.json.registryUrl, success: true }) }}"
+                "responseBody": "={{ JSON.stringify({ vpaId: $('\ud83d\udce6 Prepare Upload').item.json.vpaId, certifiedImageUrl: $('\ud83d\udd17 Get Public Image URL').item.json.webViewLink || '', certifiedImageBase64: $('\ud83d\udce6 Prepare Upload').item.json.certifiedImageBase64, registryUrl: $('\ud83d\udce6 Prepare Upload').item.json.registryUrl, issueDate: $('\ud83d\udce6 Prepare Upload').item.json.issueDate, productName: $('\ud83d\udce6 Prepare Upload').item.json.productName, success: true }) }}"
             },
             "id": "node-respond",
-            "name": "✅ Respond to Next.js",
+            "name": "\u2705 Respond to Next.js",
             "type": "n8n-nodes-base.respondToWebhook",
             "typeVersion": 1,
             "position": [
-                1340,
+                3100,
                 300
             ]
         }
     ],
     "connections": {
-        "📥 Receive Certification Request": {
+        "\ud83d\udce5 Receive Certification Request": {
             "main": [
                 [
                     {
-                        "node": "🔍 Extract & Validate Data",
+                        "node": "\ud83d\udd0d Extract & Validate Data",
                         "type": "main",
                         "index": 0
                     }
                 ]
             ]
         },
-        "🔍 Extract & Validate Data": {
+        "\ud83d\udd0d Extract & Validate Data": {
             "main": [
                 [
                     {
-                        "node": "☁️ Upload to Google Drive",
+                        "node": "\ud83d\udd2c EXIF Metadata Check",
                         "type": "main",
                         "index": 0
                     }
                 ]
             ]
         },
-        "☁️ Upload to Google Drive": {
+        "\ud83d\udd2c EXIF Metadata Check": {
             "main": [
                 [
                     {
-                        "node": "🔗 Get Public Image URL",
+                        "node": "\u2753 EXIF Failed?",
                         "type": "main",
                         "index": 0
                     }
                 ]
             ]
         },
-        "🔗 Get Public Image URL": {
+        "\u2753 EXIF Failed?": {
             "main": [
                 [
                     {
-                        "node": "📊 Write to Google Sheets",
+                        "node": "\ud83d\udeab Reject (EXIF)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "\ud83e\udd16 Claude Vision AI Check",
                         "type": "main",
                         "index": 0
                     }
                 ]
             ]
         },
-        "📊 Write to Google Sheets": {
+        "\ud83e\udd16 Claude Vision AI Check": {
             "main": [
                 [
                     {
-                        "node": "✅ Respond to Next.js",
+                        "node": "\ud83d\udcca Parse AI Verdict",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "\ud83d\udcca Parse AI Verdict": {
+            "main": [
+                [
+                    {
+                        "node": "\u2705 Approved?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "\u2705 Approved?": {
+            "main": [
+                [
+                    {
+                        "node": "\ud83c\udd94 Generate VPA ID",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "\ud83d\udeab Reject (AI)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "\ud83c\udd94 Generate VPA ID": {
+            "main": [
+                [
+                    {
+                        "node": "\ud83d\uddbc\ufe0f Watermark Image",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "\ud83d\uddbc\ufe0f Watermark Image": {
+            "main": [
+                [
+                    {
+                        "node": "\ud83d\udce6 Prepare Upload",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "\ud83d\udce6 Prepare Upload": {
+            "main": [
+                [
+                    {
+                        "node": "\u2601\ufe0f Upload to Google Drive",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "\u2601\ufe0f Upload to Google Drive": {
+            "main": [
+                [
+                    {
+                        "node": "\ud83d\udd17 Get Public Image URL",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "\ud83d\udd17 Get Public Image URL": {
+            "main": [
+                [
+                    {
+                        "node": "\ud83d\udcca Write to Google Sheets",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "\ud83d\udcca Write to Google Sheets": {
+            "main": [
+                [
+                    {
+                        "node": "\u2705 Respond to Next.js",
                         "type": "main",
                         "index": 0
                     }
@@ -197,6 +532,7 @@
         "vpa-registry"
     ],
     "triggerCount": 0,
-    "updatedAt": "2026-03-10T00:00:00.000Z",
-    "versionId": "1"
+    "updatedAt": "2026-04-14T00:00:00.000Z",
+    "versionId": "2",
+    "active": false
 }

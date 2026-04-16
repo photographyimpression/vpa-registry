@@ -25,9 +25,11 @@ function isAuthorized(req: NextRequest): boolean {
  *
  * Called by n8n (HTTP Request node). Fetches the source image,
  * composites the VPA certification badge + QR code onto it,
- * and returns the watermarked PNG as binary.
+ * and returns the watermarked JPEG as binary.
  *
- * Also accepts POST with JSON body { imageUrl, vpaId }
+ * POST accepts JSON body:
+ *   { imageUrl, vpaId }        — fetches image from URL, returns binary JPEG
+ *   { imageBase64, vpaId }     — decodes base64 directly, returns JSON { watermarkedImageBase64 }
  */
 export async function GET(req: NextRequest) {
     if (!isAuthorized(req)) {
@@ -44,7 +46,24 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const body = await req.json();
+
+    // Base64 path: n8n sends raw image as base64, receives watermarked base64 JSON back
+    if (body.imageBase64 && body.vpaId) {
+        return processWatermarkBase64(body.imageBase64, body.vpaId);
+    }
+
     return processWatermark(body.imageUrl, body.vpaId);
+}
+
+async function processWatermarkBase64(imageBase64: string, vpaId: string): Promise<NextResponse> {
+    try {
+        const imageBuffer = Buffer.from(imageBase64, 'base64');
+        const watermarked = await applyWatermark(imageBuffer, vpaId);
+        return NextResponse.json({ watermarkedImageBase64: watermarked.toString('base64') });
+    } catch (error) {
+        console.error('[VPA Watermark] Base64 error:', error);
+        return NextResponse.json({ error: 'Watermark generation failed' }, { status: 500 });
+    }
 }
 
 const ALLOWED_IMAGE_HOSTS = [
@@ -91,19 +110,24 @@ async function processWatermark(imageUrl: string | null, vpaId: string | null): 
     }
 }
 
-const MIN_CERTIFIABLE_DIM = 300; // minimum px for either dimension
+const MIN_CERTIFIABLE_DIM = 300;
+
+// Template positions (relative to 2500x2500 template)
+const TMPL_SIZE = 2500;
+const QR_LEFT = 2315;
+const QR_TOP = 2335;
+const QR_DIM = 160;
+const CERT_TEXT_X = 542;
+const CERT_TEXT_Y = 2420;
 
 export async function applyWatermark(imageBuffer: Buffer, vpaId: string): Promise<Buffer> {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://vparegistry.com';
     const certUrl = `${appUrl}/id/${vpaId}`;
 
-    // Get source image dimensions
     const meta = await sharp(imageBuffer).metadata();
     let width = meta.width || 800;
     let height = meta.height || 600;
 
-    // Cap dimensions to limit memory usage during compositing.
-    // A 6000×4000 JPEG is ~72 MB uncompressed (RGB); keeping it reasonable.
     const MAX_DIM = 4096;
     if (width > MAX_DIM || height > MAX_DIM) {
         const scale = MAX_DIM / Math.max(width, height);
@@ -114,7 +138,6 @@ export async function applyWatermark(imageBuffer: Buffer, vpaId: string): Promis
             .toBuffer();
     }
 
-    // Enforce minimum dimensions so overlays always fit
     if (width < MIN_CERTIFIABLE_DIM || height < MIN_CERTIFIABLE_DIM) {
         const scale = MIN_CERTIFIABLE_DIM / Math.min(width, height);
         width = Math.round(width * scale);
@@ -124,89 +147,78 @@ export async function applyWatermark(imageBuffer: Buffer, vpaId: string): Promis
             .toBuffer();
     }
 
-    // --- Trust banner (full-width bar at bottom) ---
-    const bannerHeight = Math.max(70, Math.min(100, Math.floor(height * 0.08)));
-    const logoSize = bannerHeight - 16;
-    const bannerQrSize = bannerHeight - 16;
-    const goldColor = '#C8A96E';
-    const titleFontSize = Math.max(13, Math.floor(bannerHeight * 0.19));
-    const idFontSize = Math.max(10, Math.floor(bannerHeight * 0.14));
-    const subtitleFontSize = Math.max(8, Math.floor(bannerHeight * 0.11));
-    const scanFontSize = Math.max(7, Math.floor(bannerHeight * 0.09));
-    const textLeft = 8 + logoSize + 14;
-
-    // Resize VPA logo for banner
+    // Load the pre-designed banner template PNG (2500x2500, has transparency)
     const fs = await import('fs');
     const path = await import('path');
-    const logoPath = path.resolve(process.cwd(), 'public/vpa-logo-square.png');
-    const logoBuffer = await sharp(fs.readFileSync(logoPath))
-        .resize(logoSize, logoSize, { fit: 'cover' })
-        .png()
-        .toBuffer();
+    const templatePath = path.resolve(process.cwd(), 'public/banner-template.png');
+    const templateBuffer = fs.readFileSync(templatePath);
 
-    // Generate banner QR code
-    const bannerQrBuffer = await QRCode.toBuffer(certUrl, {
+    // Scale factor from template to product image
+    const scale = width / TMPL_SIZE;
+
+    // Generate QR code at the right size for the template
+    const qrSize = Math.round(QR_DIM * scale);
+    const qrBuffer = await QRCode.toBuffer(certUrl, {
         type: 'png',
-        width: bannerQrSize,
+        width: qrSize,
         margin: 1,
         color: { dark: '#000000', light: '#FFFFFF' },
     });
 
-    // Banner background
-    const bannerBg = await sharp({
-        create: {
-            width: width,
-            height: bannerHeight,
-            channels: 4,
-            background: { r: 15, g: 20, b: 30, alpha: 230 },
-        },
-    }).png().toBuffer();
-
-    // Banner text SVG
-    const bannerTextSvg = Buffer.from(`
-        <svg width="${width}" height="${bannerHeight}" xmlns="http://www.w3.org/2000/svg">
-            <rect x="0" y="0" width="${width}" height="2" fill="${goldColor}" />
-            <text x="${textLeft}" y="${Math.floor(bannerHeight * 0.32)}"
-                font-family="Arial, Helvetica, sans-serif"
-                font-size="${titleFontSize}" font-weight="bold" fill="${goldColor}"
-                letter-spacing="2">VPA VERIFIED · REAL IMAGE</text>
-            <text x="${textLeft}" y="${Math.floor(bannerHeight * 0.55)}"
+    // Certificate number text overlay — aligned with template title text
+    const certFontSize = Math.max(10, Math.round(28 * scale));
+    const certTextX = Math.round(width * 0.175);
+    const certTextY = height - Math.round((TMPL_SIZE - CERT_TEXT_Y) * scale);
+    const certTextSvg = Buffer.from(`
+        <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+            <text x="${certTextX}" y="${certTextY}"
                 font-family="Courier New, Courier, monospace"
-                font-size="${idFontSize}" fill="#FFFFFF">${vpaId}</text>
-            <text x="${textLeft}" y="${Math.floor(bannerHeight * 0.76)}"
-                font-family="Arial, Helvetica, sans-serif"
-                font-size="${subtitleFontSize}" fill="rgba(255,255,255,0.55)">Scan QR to confirm at vparegistry.com</text>
-            <text x="${width - bannerQrSize - 8 - 8}" y="${Math.floor(bannerHeight * 0.42)}"
-                font-family="Arial, Helvetica, sans-serif"
-                font-size="${scanFontSize}" font-weight="bold" fill="${goldColor}"
-                text-anchor="end" letter-spacing="1">SCAN TO</text>
-            <text x="${width - bannerQrSize - 8 - 8}" y="${Math.floor(bannerHeight * 0.62)}"
-                font-family="Arial, Helvetica, sans-serif"
-                font-size="${scanFontSize}" font-weight="bold" fill="${goldColor}"
-                text-anchor="end" letter-spacing="1">VERIFY</text>
+                font-size="${certFontSize}" fill="#FFFFFF">${vpaId}</text>
         </svg>`);
 
-    // Compose the banner
-    const bannerComposite = await sharp(bannerBg)
-        .composite([
-            { input: bannerTextSvg, top: 0, left: 0 },
-            { input: logoBuffer, top: 8, left: 8 },
-            { input: bannerQrBuffer, top: 8, left: width - bannerQrSize - 8 },
-        ])
-        .png()
-        .toBuffer();
+    // Scale the template to match product image width, then crop/extend to product height
+    const scaledTemplateHeight = Math.round(TMPL_SIZE * scale);
+    let overlay: Buffer;
 
-    // --- Composite banner onto original image ---
-    // Use JPEG output (quality 92) to reduce memory + output size vs PNG.
+    if (height >= scaledTemplateHeight) {
+        // Product is taller than scaled template: place template at bottom
+        const scaledTemplate = await sharp(templateBuffer)
+            .resize(width, scaledTemplateHeight, { fit: 'fill' })
+            .png()
+            .toBuffer();
+
+        // Create a full-height transparent canvas with the template at the bottom
+        const canvas = await sharp({
+            create: { width, height, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
+        }).png().toBuffer();
+
+        overlay = await sharp(canvas)
+            .composite([{ input: scaledTemplate, top: height - scaledTemplateHeight, left: 0 }])
+            .png()
+            .toBuffer();
+    } else {
+        // Product is shorter: crop the template from the bottom
+        const scaledTemplate = await sharp(templateBuffer)
+            .resize(width, scaledTemplateHeight, { fit: 'fill' })
+            .png()
+            .toBuffer();
+
+        overlay = await sharp(scaledTemplate)
+            .extract({ left: 0, top: scaledTemplateHeight - height, width, height })
+            .png()
+            .toBuffer();
+    }
+
+    // Composite: product image + template overlay + QR code + cert text
+    const qrLeft = Math.round(QR_LEFT * scale);
+    const qrTop = height - Math.round((TMPL_SIZE - QR_TOP) * scale);
+
     return sharp(imageBuffer)
         .composite([
-            {
-                input: bannerComposite,
-                top: height - bannerHeight,
-                left: 0,
-                blend: 'over',
-            },
+            { input: overlay, top: 0, left: 0, blend: 'over' },
+            { input: qrBuffer, top: qrTop, left: qrLeft },
+            { input: certTextSvg, top: 0, left: 0 },
         ])
-        .jpeg({ quality: 92 })
+        .jpeg({ quality: 85 })
         .toBuffer();
 }

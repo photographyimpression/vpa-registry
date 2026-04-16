@@ -11,7 +11,7 @@
 
 import sharp from 'sharp';
 import { applyWatermark } from '../src/app/api/watermark/route';
-import { detectImageMagicBytes, checkForAiGenerated } from '../src/app/api/certify/route';
+// detectImageMagicBytes and checkForAiGenerated are internal to the certify route
 
 // ── Colours ───────────────────────────────────────────────────────────────────
 const G = (s: string) => `\x1b[32m${s}\x1b[0m`;  // green

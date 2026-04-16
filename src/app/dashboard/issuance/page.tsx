@@ -17,6 +17,46 @@ type UploadedFile = {
 
 type Mode = 'single' | 'bulk';
 
+/** Compress an image client-side to stay within upload/response size limits. */
+async function compressImage(file: File, maxDim = 2048, quality = 0.85): Promise<File> {
+    const url = URL.createObjectURL(file);
+    try {
+        const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+            const i = new Image();
+            i.onload = () => resolve(i);
+            i.onerror = () => reject(new Error('Failed to load image for compression'));
+            i.src = url;
+        });
+
+        let { width, height } = img;
+        // Only resize if either dimension exceeds maxDim
+        if (width > maxDim || height > maxDim) {
+            const scale = maxDim / Math.max(width, height);
+            width = Math.round(width * scale);
+            height = Math.round(height * scale);
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('Canvas not supported');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const blob = await new Promise<Blob>((resolve, reject) => {
+            canvas.toBlob(
+                (b) => (b ? resolve(b) : reject(new Error('Image compression failed'))),
+                'image/jpeg',
+                quality,
+            );
+        });
+
+        return new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' });
+    } finally {
+        URL.revokeObjectURL(url);
+    }
+}
+
 export default function IssuancePage() {
     const [mode, setMode] = useState<Mode>('single');
     const [step, setStep] = useState(1);
@@ -61,13 +101,15 @@ export default function IssuancePage() {
         const batchId = (formEl.elements.namedItem('batchId') as HTMLInputElement)?.value || '';
 
         try {
+            const compressed = await compressImage(singleFile);
             const formData = new FormData();
-            formData.append('image', singleFile);
+            formData.append('image', compressed);
             formData.append('productName', productName);
             formData.append('batchId', batchId);
 
             const res = await fetch('/api/certify', { method: 'POST', body: formData });
-            const data = await res.json();
+            let data;
+            try { data = await res.json(); } catch { data = { error: 'The certification service returned an invalid response. Please try again.' }; }
 
             if (!res.ok) throw new Error(data.error || 'Certification failed');
 
@@ -172,15 +214,17 @@ export default function IssuancePage() {
             const results = await Promise.allSettled(
                 batchIndices.map(async (i) => {
                     const f = bulkFiles[i];
+                    const compressed = await compressImage(f.file);
                     const formData = new FormData();
-                    formData.append('image', f.file);
+                    formData.append('image', compressed);
                     const pName = bulkProductName.trim() !== '' ? bulkProductName : f.file.name.replace(/\.[^.]+$/, '');
                     formData.append('productName', pName);
                     formData.append('batchId', bulkBatchId || 'BULK');
                     formData.append('idempotencyKey', `${f.id}-${f.file.name}-${f.file.size}`);
 
                     const res = await fetch('/api/certify', { method: 'POST', body: formData });
-                    const data = await res.json();
+                    let data;
+                    try { data = await res.json(); } catch { data = { error: 'Service returned an invalid response. Please try again.' }; }
                     if (!res.ok) throw new Error(data.error || 'Failed');
                     return { index: i, data };
                 })
