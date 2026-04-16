@@ -118,17 +118,15 @@ async function callN8nForDetection(
                 return { ok: true, data };
             }
 
-            // n8n returned 200 with empty body or incomplete data —
-            // the pipeline likely errored after AI approval (e.g. watermark step failed).
-            // Treat as "approved" so we can do watermarking locally.
+            // n8n returned 200 with empty body — pipeline errored internally
+            // (e.g. cold start, watermark step failed). Retry.
             if (res.ok && !body) {
-                console.warn('[VPA Certify] n8n returned empty response — assuming AI approved, proceeding locally');
-                return { ok: true, data: { approved: true } };
+                console.warn(`[VPA Certify] n8n returned empty response (attempt ${attempt + 1}/${N8N_MAX_RETRIES})`);
+                // Fall through to retry
             }
 
-            // n8n returned 200 with data but no vpaId and no rejection —
-            // partial success, treat as approved
-            if (res.ok) {
+            // n8n returned 200 with data but no vpaId and no rejection
+            if (res.ok && body) {
                 console.warn('[VPA Certify] n8n returned incomplete data — proceeding locally');
                 return { ok: true, data: { approved: true, ...data } };
             }
@@ -156,10 +154,9 @@ async function callN8nForDetection(
         }
     }
 
-    // All retries failed — allow certificate issuance without AI detection
-    // rather than blocking the user entirely
-    console.error('[VPA Certify] n8n unavailable after retries — proceeding without AI detection');
-    return { ok: true, data: { approved: true, aiSkipped: true } };
+    // All retries failed
+    console.error('[VPA Certify] n8n unavailable after retries');
+    return { ok: false, data: { error: 'Image verification service is temporarily unavailable. Please try again in a moment.' } };
 }
 
 /**
