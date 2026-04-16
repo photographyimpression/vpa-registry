@@ -283,7 +283,16 @@ export async function POST(req: NextRequest) {
         const issueDate = new Date().toISOString().split('T')[0];
 
         // ── 3. Watermark the image locally ──────────────────────────────────
-        const watermarkedBuffer = await applyWatermark(rawBuffer, vpaId);
+        let watermarkedBuffer: Buffer;
+        try {
+            watermarkedBuffer = await applyWatermark(rawBuffer, vpaId);
+        } catch (wmError) {
+            console.error('[VPA Certify] Watermark failed:', wmError);
+            return NextResponse.json(
+                { error: `Watermark step failed: ${wmError instanceof Error ? wmError.message : 'unknown'}` },
+                { status: 500 }
+            );
+        }
         const certifiedImageBase64 = watermarkedBuffer.toString('base64');
 
         // ── 4. Record to n8n (non-blocking) ─────────────────────────────────
