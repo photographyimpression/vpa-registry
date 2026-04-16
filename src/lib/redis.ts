@@ -22,11 +22,10 @@ const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 export function requireRedis(): boolean {
     if (redis) return true;
     if (IS_PRODUCTION) {
-        throw new Error(
-            '[VPA] UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are required in production. ' +
-            'Set them to enable distributed rate limiting and caching.'
+        console.warn(
+            '[VPA] UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN not set — ' +
+            'using in-memory rate limiting (not distributed across instances).'
         );
     }
-    console.warn('[VPA] Redis not configured — using in-memory fallback (dev only).');
     return false;
 }

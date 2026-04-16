@@ -328,8 +328,7 @@ export async function POST(req: NextRequest) {
             productName,
         });
     } catch (error) {
-        const msg = error instanceof Error ? error.message : String(error);
-        console.error('[VPA Certify] Error:', msg, error);
-        return NextResponse.json({ error: `Certification failed: ${msg}` }, { status: 500 });
+        console.error('[VPA Certify] Error:', error instanceof Error ? error.message : error);
+        return NextResponse.json({ error: 'Certification failed. Please try again.' }, { status: 500 });
     }
 }
