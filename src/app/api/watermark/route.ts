@@ -4,6 +4,25 @@ import QRCode from 'qrcode';
 
 export const maxDuration = 60;
 
+// Load a file from public/ — works both locally (filesystem) and on Vercel (CDN fetch)
+async function loadPublicFile(filename: string): Promise<Buffer> {
+    // Try filesystem first (works in dev and some deploy targets)
+    try {
+        const fs = await import('fs');
+        const path = await import('path');
+        const filePath = path.resolve(process.cwd(), 'public', filename);
+        if (fs.existsSync(filePath)) {
+            return fs.readFileSync(filePath);
+        }
+    } catch { /* filesystem not available */ }
+
+    // Fallback: fetch from the app's own URL (Vercel CDN serves public/ files)
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://vparegistry.com';
+    const res = await fetch(`${appUrl}/${filename}`);
+    if (!res.ok) throw new Error(`Failed to load ${filename}: ${res.status}`);
+    return Buffer.from(await res.arrayBuffer());
+}
+
 // Shared secret for n8n → /api/watermark calls.
 // REQUIRED in production. In dev, endpoint is open if unset.
 const WATERMARK_SECRET = process.env.WATERMARK_SECRET;
@@ -148,10 +167,7 @@ export async function applyWatermark(imageBuffer: Buffer, vpaId: string): Promis
     }
 
     // Load the pre-designed banner template PNG (2500x2500, has transparency)
-    const fs = await import('fs');
-    const path = await import('path');
-    const templatePath = path.resolve(process.cwd(), 'public/banner-template.png');
-    const templateBuffer = fs.readFileSync(templatePath);
+    const templateBuffer = await loadPublicFile('banner-template.png');
 
     // Scale factor from template to product image
     const scale = width / TMPL_SIZE;
@@ -167,7 +183,7 @@ export async function applyWatermark(imageBuffer: Buffer, vpaId: string): Promis
 
     // Certificate number text overlay — aligned with template title text
     const certFontSize = Math.max(10, Math.round(28 * scale));
-    const certTextX = Math.round(width * 0.175);
+    const certTextX = Math.round(width * 0.208);
     const certTextY = height - Math.round((TMPL_SIZE - CERT_TEXT_Y) * scale);
     const certTextSvg = Buffer.from(`
         <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
