@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { Upload, Edit3, ShieldCheck, CheckCircle, ArrowRight, Loader2, Layers, X, FileImage, Download, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import styles from '../Dashboard.module.css';
@@ -57,10 +57,19 @@ async function compressImage(file: File, maxDim = 2048, quality = 0.85): Promise
     }
 }
 
+const SEALING_STAGES = [
+    { label: 'Verifying image authenticity…', at: 0 },
+    { label: 'Running AI forgery detection…', at: 5 },
+    { label: 'Generating cryptographic proof…', at: 12 },
+    { label: 'Stamping QR code & certification badge…', at: 20 },
+    { label: 'Finalizing certificate…', at: 28 },
+];
+
 export default function IssuancePage() {
     const [mode, setMode] = useState<Mode>('single');
     const [step, setStep] = useState(1);
     const [isSealing, setIsSealing] = useState(false);
+    const [sealStage, setSealStage] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
     const [singleFile, setSingleFile] = useState<File | null>(null);
     const [result, setResult] = useState<{
@@ -79,6 +88,21 @@ export default function IssuancePage() {
 
     const singleFileRef = useRef<HTMLInputElement>(null);
     const bulkFileRef = useRef<HTMLInputElement>(null);
+
+    // Advance the stage label on a timer while sealing
+    useEffect(() => {
+        if (!isSealing) {
+            setSealStage(0);
+            return;
+        }
+        const startedAt = Date.now();
+        const interval = setInterval(() => {
+            const elapsed = (Date.now() - startedAt) / 1000;
+            const next = SEALING_STAGES.reduce((acc, stage, idx) => (elapsed >= stage.at ? idx : acc), 0);
+            setSealStage(next);
+        }, 500);
+        return () => clearInterval(interval);
+    }, [isSealing]);
 
     // ── SINGLE UPLOAD ────────────────────────────────────────────────────────
     const handleSingleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -355,8 +379,27 @@ export default function IssuancePage() {
                                         ⚠ {errorMsg}
                                     </p>
                                 )}
-                                <button type="submit" className={styles.actionBtnPrimary} style={{ width: '100%', marginTop: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }} disabled={isSealing}>
-                                    {isSealing ? <><Loader2 size={18} className="animate-spin" /> Generating Certificate...</> : <>Generate Cryptographic Proof <ArrowRight size={18} /></>}
+                                <button type="submit" className={styles.actionBtnPrimary} style={{ width: '100%', marginTop: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', position: 'relative', overflow: 'hidden' }} disabled={isSealing}>
+                                    {isSealing ? (
+                                        <>
+                                            <Loader2 size={18} className="animate-spin" />
+                                            <span>{SEALING_STAGES[sealStage].label}</span>
+                                            <span
+                                                aria-hidden
+                                                style={{
+                                                    position: 'absolute',
+                                                    left: 0,
+                                                    bottom: 0,
+                                                    height: '3px',
+                                                    width: `${((sealStage + 1) / SEALING_STAGES.length) * 100}%`,
+                                                    background: 'rgba(255,255,255,0.45)',
+                                                    transition: 'width 0.6s ease',
+                                                }}
+                                            />
+                                        </>
+                                    ) : (
+                                        <>Generate Cryptographic Proof <ArrowRight size={18} /></>
+                                    )}
                                 </button>
                             </form>
                         </div>
