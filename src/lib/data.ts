@@ -17,6 +17,13 @@ export interface CertificateRecord {
 const CACHE_TTL_S = 300; // 5 minutes
 const CACHE_KEY = 'vpa:certificates:all';
 
+// Per-cert direct storage. Used as the authoritative source when n8n's Sheets
+// write fails: as long as Redis has the row, /id/[X] resolves correctly even
+// before the canonical Sheets write happens. 30-day TTL leaves a generous
+// window for the Sheets row to land or for ops to investigate.
+const CERT_KEY_PREFIX = 'vpa:cert:';
+const CERT_TTL_S = 30 * 24 * 3600;
+
 let memoryCache: { data: CertificateRecord[]; expiresAt: number } | null = null;
 
 async function fetchAllFromSheets(): Promise<CertificateRecord[]> {
@@ -99,7 +106,32 @@ export async function invalidateCertificateCache(): Promise<void> {
     memoryCache = null;
 }
 
+/**
+ * Authoritatively record a freshly-issued certificate to Redis so /id/[X]
+ * resolves immediately, without waiting on the n8n → Sheets pipeline.
+ * Sheets remains the long-term canonical store.
+ */
+export async function recordCertificate(record: CertificateRecord): Promise<void> {
+    if (!redis) return;
+    try {
+        await redis.set(`${CERT_KEY_PREFIX}${record.VPA_Tracking_ID}`, record, { ex: CERT_TTL_S });
+    } catch (err) {
+        console.error('[VPA Data] recordCertificate failed:', err);
+    }
+}
+
 export async function getCertificateData(id: string): Promise<CertificateRecord | null> {
+    // 1. Try direct per-cert Redis lookup. This is the fast path for certs
+    //    issued by /api/certify whose row hasn't propagated to Sheets yet.
+    if (redis) {
+        try {
+            const direct = await redis.get<CertificateRecord>(`${CERT_KEY_PREFIX}${id}`);
+            if (direct) return direct;
+        } catch {
+            // fall through to Sheets path
+        }
+    }
+
     const url = process.env.GOOGLE_SHEETS_CSV_URL;
 
     if (!url) {

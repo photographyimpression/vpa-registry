@@ -3,7 +3,7 @@ import { applyWatermark } from '@/app/api/watermark/route';
 import { auth } from '@/auth';
 import { Ratelimit } from '@upstash/ratelimit';
 import { redis, requireRedis } from '@/lib/redis';
-import { invalidateCertificateCache } from '@/lib/data';
+import { invalidateCertificateCache, recordCertificate } from '@/lib/data';
 
 export const maxDuration = 60;
 
@@ -294,7 +294,22 @@ export async function POST(req: NextRequest) {
         }
         const certifiedImageBase64 = watermarkedBuffer.toString('base64');
 
-        // ── 4. Record to n8n (non-blocking) ─────────────────────────────────
+        // ── 4. Record to Redis so /id/[vpaId] resolves immediately ──────────
+        // The n8n → Sheets pipeline is the long-term canonical store, but
+        // n8n's Sheets write has been observed to fail silently after AI
+        // approval. Writing to Redis here makes the cert resolvable
+        // independent of that failure mode. Sheets remains authoritative.
+        await recordCertificate({
+            VPA_Tracking_ID: vpaId,
+            Cert_Issue_Date: issueDate,
+            Manufacturer_Name: manufacturerName,
+            Device_Metadata: deviceMetadata,
+            Master_Image_URL: '', // raw image not stored long-term in this path
+            Product_Name: productName,
+            Certified_Image_URL: '', // returned inline as base64 to the client
+        });
+
+        // ── 5. Record to n8n (non-blocking) ─────────────────────────────────
         // Fire-and-forget: send the certified data to n8n for Google Drive/Sheets
         if (webhookUrl && process.env.N8N_RECORD_WEBHOOK_URL) {
             fetch(process.env.N8N_RECORD_WEBHOOK_URL, {
