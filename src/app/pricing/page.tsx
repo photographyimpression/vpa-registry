@@ -65,13 +65,14 @@ const plans = [
     },
     {
         name: 'Business',
-        key: 'business' as const,
+        key: null, // Self-serve checkout launches soon — until then, route to sales.
         icon: TrendingUp,
         monthlyPrice: 999,
         annualPrice: 849,
         desc: 'For multi-location businesses and high-volume sellers.',
-        cta: 'Start Free Trial',
+        cta: 'Contact Sales',
         ctaStyle: 'outline',
+        href: '/enterprise',
         featured: false,
         features: [
             'Up to 10,000 certificates / month',
@@ -212,7 +213,7 @@ export default function PricingPage() {
                                         onClick={() => handleCheckout(plan.key!)}
                                         disabled={isLoading || !!loading}
                                         className={`${styles.planCta} ${plan.ctaStyle === 'gold' ? styles.planCtaGold : styles.planCtaOutline}`}
-                                        style={{ cursor: isLoading ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', border: 'none', width: '100%' }}
+                                        style={{ cursor: isLoading ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                                     >
                                         {isLoading
                                             ? <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Processing…</>
@@ -220,8 +221,8 @@ export default function PricingPage() {
                                         }
                                     </button>
                                 ) : (
-                                    <Link href={(plan as { href?: string }).href!} className={`${styles.planCta} ${styles.planCtaOutline}`}>
-                                        {plan.cta} <ArrowRight size={14} style={{ display: 'inline', marginLeft: '4px' }} />
+                                    <Link href={(plan as { href?: string }).href!} className={`${styles.planCta} ${styles.planCtaOutline}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                                        {plan.cta} <ArrowRight size={14} />
                                     </Link>
                                 )}
 

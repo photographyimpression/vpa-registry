@@ -4,15 +4,26 @@ import { signIn } from 'next-auth/react';
 import styles from '@/app/Home.module.css';
 import authStyles from './Auth.module.css';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { ArrowLeft, ShieldCheck } from 'lucide-react';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 
-export default function Login() {
+// Allowlist for `?next=` redirects so the param can't be used to bounce users
+// to an arbitrary external site after login.
+function safeNext(raw: string | null): string {
+    if (!raw) return '/dashboard';
+    if (!raw.startsWith('/') || raw.startsWith('//')) return '/dashboard';
+    return raw;
+}
+
+function LoginInner() {
+    const searchParams = useSearchParams();
+    const next = safeNext(searchParams.get('next'));
     const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
     const handleGoogleSignIn = async () => {
         setIsGoogleLoading(true);
-        await signIn('google', { callbackUrl: '/dashboard' });
+        await signIn('google', { callbackUrl: next });
     };
 
     return (
@@ -61,5 +72,13 @@ export default function Login() {
                 </div>
             </div>
         </main>
+    );
+}
+
+export default function Login() {
+    return (
+        <Suspense>
+            <LoginInner />
+        </Suspense>
     );
 }

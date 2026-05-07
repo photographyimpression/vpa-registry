@@ -31,18 +31,34 @@ export async function POST(req: NextRequest) {
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://vparegistry.com';
 
-    const checkoutSession = await stripe.checkout.sessions.create({
-        mode: 'subscription',
-        line_items: [{ price: priceId, quantity: 1 }],
-        customer_email: session.user.email,
-        success_url: `${appUrl}/dashboard?subscribed=1&plan=${plan}`,
-        cancel_url: `${appUrl}/pricing?cancelled=1`,
-        allow_promotion_codes: true,
-        subscription_data: {
+    let checkoutSession;
+    try {
+        checkoutSession = await stripe.checkout.sessions.create({
+            mode: 'subscription',
+            // Explicit so we don't depend on automatic-payment-methods being
+            // configured for USD in the Stripe Dashboard. Card works globally.
+            payment_method_types: ['card'],
+            line_items: [{ price: priceId, quantity: 1 }],
+            customer_email: session.user.email,
+            success_url: `${appUrl}/dashboard?subscribed=1&plan=${plan}`,
+            cancel_url: `${appUrl}/pricing?cancelled=1`,
+            allow_promotion_codes: true,
+            subscription_data: {
+                trial_period_days: 14, // matches "Start Free Trial" CTA on the pricing page
+                metadata: { vpaEmail: session.user.email, plan },
+            },
             metadata: { vpaEmail: session.user.email, plan },
-        },
-        metadata: { vpaEmail: session.user.email, plan },
-    });
+        });
+    } catch (err) {
+        console.error('[VPA Stripe Checkout] failed to create session:', err instanceof Error ? err.message : err);
+        return NextResponse.json(
+            { error: 'Could not start checkout. Please try again or contact support.' },
+            { status: 502 },
+        );
+    }
 
+    if (!checkoutSession.url) {
+        return NextResponse.json({ error: 'Checkout session has no redirect URL.' }, { status: 502 });
+    }
     return NextResponse.json({ url: checkoutSession.url });
 }
