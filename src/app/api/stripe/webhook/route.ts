@@ -38,7 +38,9 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
     }
 
-    // Forward to n8n for persistence (e.g. log to Google Sheets / send welcome email)
+    // Forward to n8n for persistence (e.g. log to Google Sheets / send welcome email).
+    // Plan resolution for the live session happens at sign-in via getSubscriptionPlan,
+    // so the webhook itself doesn't need to update any local state.
     const n8nWebhook = process.env.N8N_STRIPE_WEBHOOK_URL;
     if (n8nWebhook) {
         try {
@@ -49,29 +51,6 @@ export async function POST(req: NextRequest) {
                 signal: AbortSignal.timeout(8_000),
             }).catch(() => null); // non-fatal
         } catch { /* ignore */ }
-    }
-
-    switch (event.type) {
-        case 'checkout.session.completed': {
-            const session = event.data.object as Stripe.Checkout.Session;
-            const email = session.customer_email ?? session.metadata?.vpaEmail;
-            const plan  = session.metadata?.plan ?? 'starter';
-            console.log(`[VPA Stripe] New subscription: ${email} → ${plan}`);
-            break;
-        }
-        case 'customer.subscription.updated': {
-            const sub = event.data.object as Stripe.Subscription;
-            console.log(`[VPA Stripe] Subscription updated: ${sub.id} status=${sub.status}`);
-            break;
-        }
-        case 'customer.subscription.deleted': {
-            const sub = event.data.object as Stripe.Subscription;
-            console.log(`[VPA Stripe] Subscription cancelled: ${sub.id}`);
-            break;
-        }
-        default:
-            // Ignore other events
-            break;
     }
 
     return NextResponse.json({ received: true });

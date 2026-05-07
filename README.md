@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# VPA Registry
 
-## Getting Started
+Cryptographic product authentication platform. Issues tamper-proof digital certificates verified via QR code scan.
 
-First, run the development server:
+- **Production:** [vparegistry.com](https://vparegistry.com)
+- **Stack:** Next.js 16 (App Router) · TypeScript · NextAuth · Stripe · Sharp · Upstash Redis · n8n
+
+## Quick start (local dev)
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp env.example .env.local      # then fill in the values
+npm install
+npm run dev                    # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+For local-only work most env vars can be left blank — env validation only fails the boot in `NODE_ENV=production`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Going live
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+There's a single click-by-click checklist in [GO-LIVE.md](./GO-LIVE.md). Start there.
 
-## Learn More
+The short version:
 
-To learn more about Next.js, take a look at the following resources:
+1. Set 18 env vars on your host (`AUTH_SECRET`, Google OAuth, Google Sheets CSV, n8n URL, Upstash Redis, Stripe keys, Stripe price IDs, watermark secret, `NEXT_PUBLIC_APP_URL`).
+2. `npm run setup:stripe` — creates products, prices, and the `MONTREAL90` coupon.
+3. Activate the n8n workflow at [`n8n-workflow/vpa-certification-workflow.json`](./n8n-workflow/vpa-certification-workflow.json) and copy its webhook URL into env.
+4. Publish the registry Google Sheet as CSV and copy that URL into env.
+5. Smoke-test: sign up → buy → upload → issue certificate → scan QR.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+If any required env var is missing or still set to a placeholder, the app will refuse to start in production — you'll see a list of what's missing in the boot logs.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Architecture
 
-## Deploy on Vercel
+| Concern              | Where                                                    |
+| -------------------- | -------------------------------------------------------- |
+| Auth                 | NextAuth + Google OAuth ([`src/auth.ts`](./src/auth.ts)) |
+| Billing              | Stripe Checkout + webhooks ([`src/app/api/stripe/`](./src/app/api/stripe/)) |
+| Cert issuance        | [`src/app/api/certify/route.ts`](./src/app/api/certify/route.ts) (validates → calls n8n for AI check → watermarks locally) |
+| Watermarking         | [`src/app/api/watermark/route.ts`](./src/app/api/watermark/route.ts) (Sharp + QR + banner template) |
+| Registry lookup      | [`src/lib/data.ts`](./src/lib/data.ts) (Google Sheets CSV, cached in Upstash) |
+| Rate limiting        | Upstash sliding window, 60 req/min per user             |
+| Boot-time env check  | [`src/lib/env-check.ts`](./src/lib/env-check.ts) (called from [`instrumentation.ts`](./instrumentation.ts)) |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Deployment
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The `Dockerfile` produces a standalone Next.js container suitable for Cloud Run, Fly.io, Railway, etc.
+
+Recommended Cloud Run flags:
+
+```bash
+--memory=2Gi           # Sharp image processing needs headroom
+--min-instances=1      # avoid cold starts on user uploads
+--max-instances=10
+--concurrency=80
+```
+
+## Operations
+
+- **Pipeline test suite:** `npx tsx scripts/test-pipeline.ts` — exercises upload, AI detection, rate limiting, watermarking.
+- **Stripe setup (idempotent):** `npm run setup:stripe` — re-run any time; it won't duplicate.
+- **Email warmup SOP:** [`docs/EMAIL-WARMING-SOP.md`](./docs/EMAIL-WARMING-SOP.md).

@@ -24,19 +24,14 @@ async function loadPublicFile(filename: string): Promise<Buffer> {
 }
 
 // Shared secret for n8n → /api/watermark calls.
-// REQUIRED in production. In dev, endpoint is open if unset.
-const WATERMARK_SECRET = process.env.WATERMARK_SECRET;
+// REQUIRED in production (validated at boot in src/lib/env-check.ts).
+// In dev, endpoint is open if unset so local n8n testing doesn't need ceremony.
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 function isAuthorized(req: NextRequest): boolean {
-    if (!WATERMARK_SECRET) {
-        if (IS_PRODUCTION) {
-            console.error('[VPA Watermark] WATERMARK_SECRET is required in production.');
-            return false;
-        }
-        return true; // open in dev
-    }
-    return req.headers.get('x-vpa-watermark-secret') === WATERMARK_SECRET;
+    const secret = process.env.WATERMARK_SECRET;
+    if (!secret) return !IS_PRODUCTION; // dev: open; prod: closed (also caught at boot)
+    return req.headers.get('x-vpa-watermark-secret') === secret;
 }
 
 /**

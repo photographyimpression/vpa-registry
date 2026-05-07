@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "setup:stripe": "npx tsx scripts/stripe-setup.ts"
   },
   "dependencies": {
     "@stripe/stripe-js": "^8.9.0",

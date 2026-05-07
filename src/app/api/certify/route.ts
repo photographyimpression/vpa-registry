@@ -46,7 +46,9 @@ async function checkRateLimit(userId: string): Promise<boolean> {
 }
 
 // ── Idempotency ─────────────────────────────────────────────────────────────
-const IDEMPOTENCY_TTL_S = 300;
+// 1 hour: long enough to absorb retries from a flaky network or a user who
+// closes the tab and comes back, short enough that the same key isn't held forever.
+const IDEMPOTENCY_TTL_S = 3600;
 const localIdempotencySet = new Set<string>();
 
 async function checkIdempotency(key: string): Promise<boolean> {
