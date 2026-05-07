@@ -65,14 +65,13 @@ const plans = [
     },
     {
         name: 'Business',
-        key: null, // Self-serve checkout launches soon — until then, route to sales.
+        key: 'business' as const,
         icon: TrendingUp,
         monthlyPrice: 999,
         annualPrice: 849,
         desc: 'For multi-location businesses and high-volume sellers.',
-        cta: 'Contact Sales',
+        cta: 'Start Free Trial',
         ctaStyle: 'outline',
-        href: '/enterprise',
         featured: false,
         features: [
             'Up to 10,000 certificates / month',

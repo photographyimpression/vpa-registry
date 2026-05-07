@@ -50,3 +50,4 @@ scripts/email-setup/mail-data/
 scripts/email-setup/mail-state/
 scripts/email-setup/mail-logs/
 scripts/email-setup/config/
+.scratch/
